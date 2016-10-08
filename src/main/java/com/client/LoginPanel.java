@@ -1,6 +1,7 @@
 package com.client;
 
 import com.client.events.UserLoggedInEvent;
+import com.client.gin.Injector;
 import com.client.service.ClientSessionService;
 import com.client.service.ClientSessionServiceAsync;
 import com.google.gwt.core.client.GWT;
@@ -8,6 +9,7 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DecoratorPanel;
@@ -22,14 +24,18 @@ import com.google.gwt.user.client.ui.Widget;
 import com.shared.model.User;
 import com.shared.utils.UserUtils;
 
+import javax.inject.Inject;
+
 /**
  * Created by Dimon on 19.07.2016.
  */
 public class LoginPanel extends VerticalPanel {
-    private SimpleEventBus simpleEventBus;
+//    @Inject
+//    private SimpleEventBus eventBus;
     private ClientSessionServiceAsync clientSessionService = GWT.create(ClientSessionService.class);
-    public LoginPanel(final SimpleEventBus eventBus) {
-        this.simpleEventBus = eventBus;
+
+    @Inject
+    public LoginPanel(final EventBus eventBus) {
 //        setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
 //        setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
         getElement().setAttribute("align", "center");
@@ -78,8 +84,8 @@ public class LoginPanel extends VerticalPanel {
                                     UserUtils.currentUser = result;
 //                                    UserUtils.INSTANCE.getCurrentUser().setSettings(result.getSettings());
                                     RootLayoutPanel.get().clear();
-                                    RootLayoutPanel.get().add(new MainTabPanel(2.5, Style.Unit.EM, simpleEventBus));
-                                    simpleEventBus.fireEvent(userLoggedInEvent);
+                                    RootLayoutPanel.get().add(Injector.INSTANCE.getMainTabPanel());
+                                    Injector.INSTANCE.getEventBus().fireEvent(userLoggedInEvent);
                                 }
                             });
 //                            clientSessionService.getCurrentUser(nameTextBox.getValue(), passwordTextBox.getValue(),

@@ -10,6 +10,7 @@ import com.shared.model.SessionPseudoName;
 import com.shared.model.User;
 import com.shared.utils.UserUtils;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -25,7 +26,7 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
 //    Map<String,SessionPseudoName> pseudoNamesMap = new HashMap<>();
 //    Map<Long, ClientSession> clientSessionMap = new HashMap<>();
     @Override
-    public List<SessionPseudoName> getFreePseudoNames() {
+    public List<SessionPseudoName> getFreePseudoNames(Long userId) {
         List<SessionPseudoName> freeNames = ObjectifyService.ofy().load().type(SessionPseudoName.class).
                 filter("isUsed == ", "false").list();//To change body of implemented methods use File | Settings | File Templates.
         return freeNames;  //To change body of implemented methods use File | Settings | File Templates.
@@ -56,7 +57,12 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
         }
     }
 
-    @Override
+  @Override
+  public void removeUser(String value) {
+
+  }
+
+  @Override
     public List<ClientSession> saveClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean isShowPayed) {
         Result<Key<ClientSession>> clientSessionResult = ObjectifyService.ofy().save().entity(clientSession);
         return getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), isShowRemoved, isShowPayed);
@@ -107,7 +113,7 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
     }
 
     @Override
-    public List<SessionPseudoName> getAllPseudoNames() {
+    public List<SessionPseudoName> getAllPseudoNames(Long userId) {
         return ObjectifyService.ofy().load().type(SessionPseudoName.class).filter("userId =", UserUtils.INSTANCE.getCurrentUser().getUserId())
                 .list();
     }
@@ -118,8 +124,9 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
     }
 
     @Override
-    public void removeName(String sessionPseudoName, Long userId) {
-        ObjectifyService.ofy().delete().entity(sessionPseudoName);
+    public List<SessionPseudoName> removeName(String sessionPseudoName, Long userId) {
+//        ObjectifyService.ofy().delete().entity(sessionPseudoName);
+          return new ArrayList<>();
     }
 
     @Override

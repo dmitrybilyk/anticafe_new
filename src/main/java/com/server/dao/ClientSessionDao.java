@@ -20,7 +20,7 @@ import java.util.List;
  */
 public interface ClientSessionDao {
 
-    List<SessionPseudoName> getFreePseudoNames();
+    List<SessionPseudoName> getFreePseudoNames(Long userId);
 
     void markNameAsFree(String name, Long userId);
 
@@ -28,6 +28,8 @@ public interface ClientSessionDao {
     SessionPseudoName markNameAsFreeById(Long nameId);
 
     void addNames(List<SessionPseudoName> pseudoNamesList);
+
+    void removeUser(String value);
 
     List<ClientSession> saveClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean showPayedOn);
 
@@ -43,11 +45,11 @@ public interface ClientSessionDao {
 
     List<ClientSession> payClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed);
 
-    List<SessionPseudoName> getAllPseudoNames();
+    List<SessionPseudoName> getAllPseudoNames(Long userId);
 
     void addName(SessionPseudoName namesTextBoxValue);
 
-    void removeName(String sessionPseudoName, Long userId);
+    List<SessionPseudoName> removeName(String sessionPseudoName, Long userId);
 
     User getCurrentUser(String userName, String userPassword);
 

@@ -19,11 +19,13 @@ import java.util.List;
  */
 @RemoteServiceRelativePath("clientSession")
 public interface ClientSessionService extends RemoteService {
-    public List<SessionPseudoName> getFreePseudoNames();
+    public List<SessionPseudoName> getFreePseudoNames(Long userId);
     public void markNameAsFree(String name, Long userId);
     public SessionPseudoName markNameAsUsed(String name, Long userId);
 
     void addNames(List<SessionPseudoName> pseudoNamesList);
+
+    void removeUser(String value);
 
     List<ClientSession> saveClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean showPayedOn);
 
@@ -39,11 +41,11 @@ public interface ClientSessionService extends RemoteService {
 
     List<ClientSession> payClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed);
 
-    List<SessionPseudoName> getAllPseudoNames();
+    List<SessionPseudoName> getAllPseudoNames(Long userId);
 
     void addName(SessionPseudoName namesTextBoxValue);
 
-    void removeName(String sessionPseudoName, Long userId);
+    List<SessionPseudoName> removeName(String sessionPseudoName, Long userId);
 
     User getCurrentUser(String userName, String userPassword);
 

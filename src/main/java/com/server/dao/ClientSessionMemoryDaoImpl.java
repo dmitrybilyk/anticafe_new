@@ -11,7 +11,6 @@ import com.shared.model.SessionPseudoName;
 import com.shared.model.SettingsHolder;
 import com.shared.model.User;
 import com.shared.utils.UserUtils;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -94,7 +93,7 @@ public class ClientSessionMemoryDaoImpl implements ClientSessionDao{
     }
 
     @Override
-    public List<SessionPseudoName> getFreePseudoNames() {
+    public List<SessionPseudoName> getFreePseudoNames(Long userId) {
         List<SessionPseudoName> freeNames = new ArrayList<>();
         for (String key : pseudoNamesMap.keySet()) {
             if (!pseudoNamesMap.get(key).isUsed()) {
@@ -125,6 +124,11 @@ public class ClientSessionMemoryDaoImpl implements ClientSessionDao{
         for (SessionPseudoName name : pseudoNamesList) {
             this.pseudoNamesMap.put(name.getName(), name);
         }
+    }
+
+    @Override
+    public void removeUser(String value) {
+
     }
 
     @Override
@@ -236,7 +240,7 @@ public class ClientSessionMemoryDaoImpl implements ClientSessionDao{
     }
 
     @Override
-    public List<SessionPseudoName> getAllPseudoNames() {
+    public List<SessionPseudoName> getAllPseudoNames(Long userId) {
         List<SessionPseudoName> allNames = new ArrayList<>();
         for (String key : pseudoNamesMap.keySet()) {
             allNames.add(pseudoNamesMap.get(key));
@@ -250,8 +254,9 @@ public class ClientSessionMemoryDaoImpl implements ClientSessionDao{
     }
 
     @Override
-    public void removeName(String sessionPseudoName, Long userId) {
-        this.pseudoNamesMap.remove(sessionPseudoName);
+    public List<SessionPseudoName> removeName(String sessionPseudoName, Long userId) {
+//        return this.pseudoNamesMap.remove(sessionPseudoName);
+        return new ArrayList<>();
     }
 
     @Override

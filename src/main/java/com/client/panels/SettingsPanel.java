@@ -2,6 +2,7 @@ package com.client.panels;
 
 import com.client.events.UserLoggedInEvent;
 import com.client.events.UserLoggedInHandler;
+import com.client.gin.Injector;
 import com.client.service.ClientSessionService;
 import com.client.service.ClientSessionServiceAsync;
 import com.client.widgets.HourSettingsWidget;
@@ -16,6 +17,7 @@ import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
+import com.google.inject.Inject;
 import com.shared.model.HourCostModel;
 import com.shared.model.MoreLessUnlimModel;
 import com.shared.model.SessionPseudoName;
@@ -41,16 +43,16 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public class SettingsPanel extends SplitLayoutPanel {
-    private SimpleEventBus simpleEventBus;
+//    @Inject
+//    private SimpleEventBus eventBus;
     private ClientSessionServiceAsync clientSessionService = GWT.create(ClientSessionService.class);
     HourSettingsWidget hourSettingsWidget;
     MoreLessUnlimWidget moreLessUnlimWidget;
 //    private FormPanel formPanel = new FormPanel();
 //    VerticalPanel mainPanel = new VerticalPanel();
-    public SettingsPanel(SimpleEventBus simpleEventBus) {
+    public SettingsPanel() {
         super();
 //        super(Style.Unit.PX);
-        this.simpleEventBus = simpleEventBus;
         VerticalPanel costSettingsVerticalPanel = new VerticalPanel();
         costSettingsVerticalPanel.setSize("300px", "300px");
         FlowPanel radioBoxesPanel = new FlowPanel();
@@ -105,7 +107,7 @@ public class SettingsPanel extends SplitLayoutPanel {
         existingNamesPanel.add(existingNamesLabel);
         existingNamesPanel.add(namesBox);
         pseudoNamesSettingsPanel.add(existingNamesPanel);
-        clientSessionService.getAllPseudoNames(new AsyncCallback<List<SessionPseudoName>>() {
+        clientSessionService.getAllPseudoNames(UserUtils.currentUser.getUserId(), new AsyncCallback<List<SessionPseudoName>>() {
             @Override
             public void onFailure(Throwable throwable) {
                 //To change body of implemented methods use File | Settings | File Templates.
@@ -161,7 +163,7 @@ public class SettingsPanel extends SplitLayoutPanel {
             @Override
             public void onClick(ClickEvent event) {
                 final String selectedName = namesBox.getSelectedValue();
-                clientSessionService.getFreePseudoNames(new AsyncCallback<List<SessionPseudoName>>() {
+                clientSessionService.getFreePseudoNames(UserUtils.currentUser.getUserId(), new AsyncCallback<List<SessionPseudoName>>() {
                     @Override
                     public void onFailure(Throwable caught) {
 
@@ -172,16 +174,19 @@ public class SettingsPanel extends SplitLayoutPanel {
                         if (!result.contains(new SessionPseudoName(selectedName))) {
                             Window.alert("Это имя используется");
                         } else {
-                            clientSessionService.removeName(selectedName, UserUtils.currentUser.getUserId(), new AsyncCallback<Void>() {
+                            clientSessionService.removeName(selectedName, UserUtils.currentUser.getUserId(), new AsyncCallback<List<SessionPseudoName>>() {
                                 @Override
                                 public void onFailure(Throwable caught) {
 
                                 }
 
                                 @Override
-                                public void onSuccess(Void result) {
+                                public void onSuccess(List<SessionPseudoName> result) {
                                     namesTextBox.setText("");
-                                    namesBox.removeItem(namesBox.getSelectedIndex());
+                                    namesBox.clear();
+                                    for (SessionPseudoName sessionPseudoName : result) {
+                                        namesBox.addItem(sessionPseudoName.getName());
+                                    }
                                 }
                             });
                         }
@@ -341,7 +346,7 @@ public class SettingsPanel extends SplitLayoutPanel {
         add(costSettingsVerticalPanel);
 //        add(saveButton);
 
-        simpleEventBus.addHandler(UserLoggedInEvent.TYPE, new UserLoggedInHandler() {
+        Injector.INSTANCE.getEventBus().addHandler(UserLoggedInEvent.TYPE, new UserLoggedInHandler() {
             @Override
             public void userIsLoggedIn(UserLoggedInEvent userLoggedInEvent) {
                 User currentUser = UserUtils.currentUser;

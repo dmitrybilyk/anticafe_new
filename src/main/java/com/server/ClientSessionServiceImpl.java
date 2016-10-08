@@ -23,8 +23,8 @@ public class ClientSessionServiceImpl extends RemoteServiceServlet implements Cl
     private ClientSessionDao clientSessionDao = new ClientSessionHibernateDaoImpl();
 //    private ClientSessionDao clientSessionDao = new ClientSessionNoSqlDaoImpl();
     @Override
-    public List<SessionPseudoName> getFreePseudoNames() {
-        return clientSessionDao.getFreePseudoNames();  //To change body of implemented methods use File | Settings | File Templates.
+    public List<SessionPseudoName> getFreePseudoNames(Long userId) {
+        return clientSessionDao.getFreePseudoNames(userId);  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -40,6 +40,11 @@ public class ClientSessionServiceImpl extends RemoteServiceServlet implements Cl
     @Override
     public void addNames(List<SessionPseudoName> pseudoNamesList) {
         clientSessionDao.addNames(pseudoNamesList);
+    }
+
+    @Override
+    public void removeUser(String value) {
+        clientSessionDao.removeUser(value);
     }
 
     @Override
@@ -80,8 +85,8 @@ public class ClientSessionServiceImpl extends RemoteServiceServlet implements Cl
     }
 
     @Override
-    public List<SessionPseudoName> getAllPseudoNames() {
-        return clientSessionDao.getAllPseudoNames();
+    public List<SessionPseudoName> getAllPseudoNames(Long userId) {
+        return clientSessionDao.getAllPseudoNames(userId);
     }
 
     @Override
@@ -90,8 +95,8 @@ public class ClientSessionServiceImpl extends RemoteServiceServlet implements Cl
     }
 
     @Override
-    public void removeName(String sessionPseudoName, Long userId) {
-        clientSessionDao.removeName(sessionPseudoName, userId);
+    public List<SessionPseudoName> removeName(String sessionPseudoName, Long userId) {
+        return clientSessionDao.removeName(sessionPseudoName, userId);
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.client.service.ClientSessionServiceAsync;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -13,6 +14,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.inject.Inject;
 import com.shared.model.ClientSession;
 import com.shared.model.DatePoint;
 import com.shared.utils.UserUtils;
@@ -27,12 +29,13 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class NameSelectWindow extends DialogBox {
-    private SimpleEventBus simpleEventBus;
+//    @Inject
+//    private SimpleEventBus eventBus;
     private VerticalPanel verticalPanel;
     private final ClientSessionServiceAsync clientSessionService = GWT.create(ClientSessionService.class);
 
-    public NameSelectWindow(final SimpleEventBus simpleEventBus) {
-        this.simpleEventBus = simpleEventBus;
+    @Inject
+    public NameSelectWindow(final EventBus eventBus) {
         verticalPanel = new VerticalPanel();
         setHeight("350px");
         setWidth("700px");
@@ -51,7 +54,7 @@ public class NameSelectWindow extends DialogBox {
             public void onClick(ClickEvent clickEvent) {
                 AddSessionEvent event = new AddSessionEvent();
                 event.setClientPseudoName(namesListBox.getSelectedValue());
-                simpleEventBus.fireEvent(event);//To change body of implemented methods use File | Settings | File Templates.
+                eventBus.fireEvent(event);//To change body of implemented methods use File | Settings | File Templates.
             }
         });
         verticalPanel.add(button);

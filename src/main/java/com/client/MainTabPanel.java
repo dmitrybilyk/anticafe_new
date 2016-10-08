@@ -4,6 +4,10 @@ import com.client.events.AddSessionEvent;
 import com.client.events.ChangeDatePointEvent;
 import com.client.events.ToggleShowPayedEvent;
 import com.client.events.ToggleShowRemovedEvent;
+import com.client.events.UserLoggedInEvent;
+import com.client.events.UserLoggedInHandler;
+import com.client.gin.Injector;
+import com.client.panels.ProfilePanel;
 import com.client.panels.ReportsPanel;
 import com.client.panels.SettingsPanel;
 import com.client.service.ClientSessionService;
@@ -16,6 +20,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -25,12 +30,14 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.inject.Inject;
 import com.shared.model.ClientSession;
 import com.shared.model.DatePoint;
 import com.shared.model.SessionPseudoName;
@@ -43,7 +50,8 @@ import java.util.List;
  * Created by Dimon on 19.07.2016.
  */
 public class MainTabPanel extends TabLayoutPanel {
-    private SimpleEventBus simpleEventBus;
+//  @Inject
+//  private SimpleEventBus eventBus;
   ToggleButton showRemovedButton;
   ToggleButton showPayedButton;
 //  Label sumLabel;
@@ -52,12 +60,10 @@ public class MainTabPanel extends TabLayoutPanel {
   /**
    * Creates an empty tab panel.
    *
-   * @param barHeight the size of the tab bar
-   * @param barUnit   the unit in which the tab bar size is specified
    */
-  public MainTabPanel(double barHeight, Style.Unit barUnit, final SimpleEventBus eventBus) {
-    super(barHeight, barUnit);
-      this.simpleEventBus = eventBus;
+  @Inject
+  public MainTabPanel(final EventBus eventBus) {
+    super(2.5, Style.Unit.EM);
     datePointListBox = new ListBox();
     for (DatePoint datePoint : DatePoint.values()) {
       datePointListBox.addItem(datePoint.getText());
@@ -89,7 +95,7 @@ public class MainTabPanel extends TabLayoutPanel {
 //    setHeight("100%");
 //    setWidth("100%");
     // Add a home tab
-    String[] tabTitles = {"Сессии", "Настройки", "Отчеты"};
+    String[] tabTitles = {"Сессии", "Настройки", "Отчеты", "Профиль"};
 //    ClientSessionGridPanel clientSessionGridPanel = new ClientSessionGridPanel(simpleEventBus);
     SplitLayoutPanel splitLayoutPanel = new SplitLayoutPanel();
     splitLayoutPanel.setSize("100%", "100%");
@@ -164,7 +170,7 @@ public class MainTabPanel extends TabLayoutPanel {
 
 
     final TextBox userNameBox = new TextBox();
-    Button addUserButton = new Button("Добавить пользователя");
+    final Button addUserButton = new Button("Добавить пользователя");
     addUserButton.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
@@ -181,10 +187,41 @@ public class MainTabPanel extends TabLayoutPanel {
         });
       }
     });
+    final Button removeUserButton = new Button("Удалить пользователя");
+    removeUserButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        clientSessionService.removeUser(userNameBox.getValue(), new AsyncCallback<Void>() {
+          @Override
+          public void onFailure(Throwable caught) {
 
-//    eastButtonsPanel.add(userNameBox);
-//    eastButtonsPanel.add(addUserButton);
+          }
 
+          @Override
+          public void onSuccess(Void result) {
+            Window.alert("User is removed" );
+          }
+        });
+      }
+    });
+
+    eastButtonsPanel.add(userNameBox);
+    eastButtonsPanel.add(addUserButton);
+    eastButtonsPanel.add(removeUserButton);
+    userNameBox.setVisible(false);
+    addUserButton.setVisible(false);
+    removeUserButton.setVisible(false);
+
+    eventBus.addHandler(UserLoggedInEvent.TYPE, new UserLoggedInHandler() {
+      @Override
+      public void userIsLoggedIn(UserLoggedInEvent userLoggedInEvent) {
+        if (userLoggedInEvent.getUserName().equals("dik81")) {
+          userNameBox.setVisible(true);
+          addUserButton.setVisible(true);
+          removeUserButton.setVisible(true);
+        }
+      }
+    });
     splitLayoutPanel.addEast(eastButtonsPanel, 250);
 //    eastButtonsPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
     eastButtonsPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
@@ -196,17 +233,18 @@ public class MainTabPanel extends TabLayoutPanel {
     southPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
 //    southPanel.getElement().getStyle().setMargin(10, Style.Unit.PX);
 //    splitLayoutPanel.addSouth(southPanel, 60);
-    splitLayoutPanel.add(new ClientSessionGridPanel(simpleEventBus));
+    splitLayoutPanel.add(Injector.INSTANCE.getClientSessionGridPanel());
 
     // Add a tab with an image
 //    SimplePanel imageContainer = new SimplePanel();
 //    imageContainer.setWidget(new Button("dfdfdf"));
-    add(new SettingsPanel(simpleEventBus), tabTitles[1]);
+    add(Injector.INSTANCE.getSettingsPanel(), tabTitles[1]);
 
     // Add a tab
 //    HTML moreInfo = new HTML("some html");
     add(new ReportsPanel(), tabTitles[2]);
 
+    add(new ProfilePanel(), tabTitles[3] + " - " + UserUtils.currentUser.getUserName());
     // Return the content
     selectTab(0);
 //    ensureDebugId("cwTabPanel");
@@ -232,7 +270,7 @@ public class MainTabPanel extends TabLayoutPanel {
 
     final ListBox namesListBox = new ListBox();
     namesListBox.setWidth("200px");
-    clientSessionService.getFreePseudoNames(new AsyncCallback<List<SessionPseudoName>>() {
+    clientSessionService.getFreePseudoNames(UserUtils.currentUser.getUserId(), new AsyncCallback<List<SessionPseudoName>>() {
       @Override
       public void onFailure(Throwable caught) {
 
@@ -267,7 +305,7 @@ public class MainTabPanel extends TabLayoutPanel {
 //            simpleEventBus.fireEvent(event);
 //          }
 //        });
-        simpleEventBus.fireEvent(event);
+        Injector.INSTANCE.getEventBus().fireEvent(event);
         //To change body of implemented methods use File | Settings | File Templates.
         dialogBox.hide();
       }

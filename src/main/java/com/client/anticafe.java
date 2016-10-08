@@ -1,5 +1,6 @@
 package com.client;
 
+import com.client.gin.Injector;
 import com.client.service.ClientSessionService;
 import com.client.service.ClientSessionServiceAsync;
 import com.google.gwt.core.client.EntryPoint;
@@ -28,12 +29,12 @@ public class anticafe implements EntryPoint {
   public void onModuleLoad() {
       // Load the visualization api, passing the onLoadCallback to be called
       // when loading is done.
+      final Injector injector = Injector.INSTANCE;
       Runnable runnable = new Runnable() {
           @Override
           public void run() {
-              SimpleEventBus simpleEventBus = new SimpleEventBus();
             RootLayoutPanel.get().getElement().getStyle().setBackgroundColor("navajowhite");
-            RootLayoutPanel.get().add(new LoginPanel(simpleEventBus));
+            RootLayoutPanel.get().add(injector.getLoginPanel());
           }
       };
       VisualizationUtils.loadVisualizationApi(runnable, PieChart.PACKAGE);

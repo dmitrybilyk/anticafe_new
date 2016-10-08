@@ -14,13 +14,15 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ClientSessionServiceAsync {
-    void getFreePseudoNames(AsyncCallback<List<SessionPseudoName>> async);
+    void getFreePseudoNames(Long userId, AsyncCallback<List<SessionPseudoName>> async);
 
     void markNameAsFree(String name, Long userId, AsyncCallback<Void> async);
 
     void markNameAsUsed(String name, Long userId, AsyncCallback<SessionPseudoName> async);
 
     void addNames(List<SessionPseudoName> pseudoNamesList, AsyncCallback<Void> asyncCallback);
+
+    void removeUser(String value, AsyncCallback<Void> asyncCallback);
 
     void saveClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean showPayedOn, AsyncCallback<List<ClientSession>> asyncCallback);
 
@@ -34,11 +36,11 @@ public interface ClientSessionServiceAsync {
 
     void payClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed, AsyncCallback<List<ClientSession>> asyncCallback);
 
-    void getAllPseudoNames(AsyncCallback<List<SessionPseudoName>> asyncCallback);
+    void getAllPseudoNames(Long userId, AsyncCallback<List<SessionPseudoName>> asyncCallback);
 
     void addName(SessionPseudoName namesTextBoxValue, AsyncCallback<Void> asyncCallback);
 
-    void removeName(String sessionPseudoName, Long userId, AsyncCallback<Void> asyncCallback);
+    void removeName(String sessionPseudoName, Long userId, AsyncCallback<List<SessionPseudoName>> asyncCallback);
 
     void getCurrentUser(String userName, String userPassword, AsyncCallback<User> asyncCallback);
 

@@ -10,6 +10,7 @@ import com.client.events.ToggleShowPayedEventHandler;
 import com.client.events.ToggleShowRemovedEvent;
 import com.client.events.ToggleShowRemovedEventHandler;
 import com.client.events.UpdateSumEvent;
+import com.client.gin.Injector;
 import com.client.service.ClientSessionService;
 import com.client.service.ClientSessionServiceAsync;
 import com.google.common.collect.Range;
@@ -20,6 +21,7 @@ import com.google.gwt.dom.builder.shared.TableRowBuilder;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.media.client.Audio;
@@ -39,6 +41,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
+import com.google.inject.Inject;
 import com.shared.model.ClientSession;
 import com.shared.model.DatePoint;
 import com.shared.model.HourCostModel;
@@ -55,7 +58,8 @@ import java.util.List;
  * Created by dmitry on 26.07.16.
  */
 public class ClientSessionGridPanel extends VerticalPanel {
-  private SimpleEventBus simpleEventBus;
+//  @Inject
+//  private SimpleEventBus simpleEventBus;
   long firstPartTimeLength = 60000;
   long firstPartSumAmount = 3500;
   DatePoint currentDatePointValue = DatePoint.TODAY;
@@ -71,8 +75,8 @@ public class ClientSessionGridPanel extends VerticalPanel {
     }
   });
 
-  public ClientSessionGridPanel(final SimpleEventBus eventBus) {
-    this.simpleEventBus = eventBus;
+  @Inject
+  public ClientSessionGridPanel(final EventBus simpleEventBus) {
     clientSessionDataGrid.setFooterBuilder(new CustomFooterBuilder());
     Long firstPartLength = UserUtils.getSettings().getFirstPartLength();
     if (firstPartLength != null) {
@@ -168,7 +172,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
                     }
                     UpdateSumEvent updateSumEvent = new UpdateSumEvent();
                     updateSumEvent.setSum(sum);
-                    eventBus.fireEvent(updateSumEvent);
+                    simpleEventBus.fireEvent(updateSumEvent);
                   }
                 });
       }
@@ -889,7 +893,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
 
     final ListBox namesListBox = new ListBox();
     namesListBox.setWidth("200px");
-    clientSessionService.getFreePseudoNames(new AsyncCallback<List<SessionPseudoName>>() {
+    clientSessionService.getFreePseudoNames(UserUtils.currentUser.getUserId(), new AsyncCallback<List<SessionPseudoName>>() {
       @Override
       public void onFailure(Throwable caught) {
 
@@ -923,7 +927,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
 //            simpleEventBus.fireEvent(event);
 //          }
 //        });
-        simpleEventBus.fireEvent(event);
+        Injector.INSTANCE.getEventBus().fireEvent(event);
         //To change body of implemented methods use File | Settings | File Templates.
         dialogBox.hide();
       }
