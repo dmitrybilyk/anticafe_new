@@ -126,7 +126,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
     simpleEventBus.addHandler(ToggleShowRemovedEvent.TYPE, new ToggleShowRemovedEventHandler() {
       @Override
       public void toggleShowRemoved(ToggleShowRemovedEvent toggleShowRemovedEvent) {
-        clientSessionService.getClientSessions(DatePoint.TODAY, UserUtils.INSTANCE.getCurrentUser(), toggleShowRemovedEvent.isShowRemovedOn(),
+        clientSessionService.getClientSessions(currentDatePointValue, UserUtils.INSTANCE.getCurrentUser(), toggleShowRemovedEvent.isShowRemovedOn(),
                 toggleShowRemovedEvent.isShowPayedCurrentState(), new AsyncCallback<List<ClientSession>>() {
                   @Override
                   public void onFailure(Throwable caught) {

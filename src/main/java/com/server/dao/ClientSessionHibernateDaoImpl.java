@@ -253,40 +253,74 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
         Transaction transaction = null;
         try {
             transaction = session.beginTransaction();
-            Query query = session.createQuery("from com.shared.model.ClientSession where userEntity =:currentUserId");
+            StringBuilder queryString = new StringBuilder();
+            String mainQuery = "from com.shared.model.ClientSession where userEntity =:currentUserId";
+            queryString.append(mainQuery);
+            if (!isShowRemoved) {
+                String removedQuery = " and status !=:removedStatus";
+                queryString.append(removedQuery);
+            }
+            if (!showPayedOn) {
+                String payedQuery = " and status !=:payedStatus";
+                queryString.append(payedQuery);
+            }
+            Date comparedDate = new Date();
+            Calendar c = Calendar.getInstance();
+            c.setTime(comparedDate);
+            c.add(Calendar.DATE, datePoint.getShiftValue());
+            Calendar cal = DateUtils.truncate(c, Calendar.DATE);
+            Date comparedTime = cal.getTime();
+
+            String dateQuery = " and startTime >:comparedTime ";
+            queryString.append(dateQuery);
+            String orderQuery = " order by creationTime DESC";
+            queryString.append(orderQuery);
+            Query query = session.createQuery(queryString.toString());
             query.setParameter("currentUserId", currentUser.getUserId());
+            if (!isShowRemoved) {
+                query.setParameter("removedStatus", ClientSession.SESSION_STATUS.REMOVED);
+            }
+            if (!showPayedOn) {
+                query.setParameter("payedStatus", ClientSession.SESSION_STATUS.PAYED);
+            }
+            query.setParameter("comparedTime", comparedTime.getTime());
             List<ClientSession> clientSessions = query.list();
-            Predicate<ClientSession> removedPredicate = new Predicate<ClientSession>() {
-                @Override
-                public boolean apply(ClientSession clientSession) {
-                    return isShowRemoved || ClientSession.SESSION_STATUS.REMOVED != clientSession.getSessionStatus();
-                }
-            };
-            Predicate<ClientSession> payedPredicate = new Predicate<ClientSession>() {
-                @Override
-                public boolean apply(ClientSession clientSession) {
-                    return showPayedOn || ClientSession.SESSION_STATUS.PAYED != clientSession.getSessionStatus();
-                }
-            };
-            Predicate<ClientSession> datePointPredicate = new Predicate<ClientSession>() {
-                @Override
-                public boolean apply(ClientSession clientSession) {
-                    Date comparedDate = new Date();
-                    Calendar c = Calendar.getInstance();
-                    c.setTime(comparedDate);
-                    c.add(Calendar.DATE, datePoint.getShiftValue());
-                    Calendar cal = DateUtils.truncate(c, Calendar.DATE);
-                    Date comparedTime = cal.getTime();
-                    return clientSession.getStartTime() > comparedTime.getTime();
-                }
-            };
-            Collection<ClientSession> filteredByRemoveList = Collections2.filter(clientSessions, removedPredicate);
-            Collection<ClientSession> clientSessionCollections = Collections2.filter(filteredByRemoveList, payedPredicate);
-            Collection<ClientSession> filteredByDateCollections = Collections2.filter(clientSessionCollections, datePointPredicate);
-            ArrayList<ClientSession> filteredCollections = new ArrayList<>(filteredByDateCollections);
-            Collections.sort(filteredCollections);
+//            Predicate<ClientSession> removedPredicate = new Predicate<ClientSession>() {
+//                @Override
+//                public boolean apply(ClientSession clientSession) {
+//                    return isShowRemoved || ClientSession.SESSION_STATUS.REMOVED != clientSession.getSessionStatus();
+//                }
+//            };
+//            Predicate<ClientSession> payedPredicate = new Predicate<ClientSession>() {
+//                @Override
+//                public boolean apply(ClientSession clientSession) {
+//                    return showPayedOn || ClientSession.SESSION_STATUS.PAYED != clientSession.getSessionStatus();
+//                }
+//            };
+//            Predicate<ClientSession> datePointPredicate = new Predicate<ClientSession>() {
+//                @Override
+//                public boolean apply(ClientSession clientSession) {
+//                    Date comparedDate = new Date();
+//                    Calendar c = Calendar.getInstance();
+//                    c.setTime(comparedDate);
+//                    c.add(Calendar.DATE, datePoint.getShiftValue());
+//                    Calendar cal = DateUtils.truncate(c, Calendar.DATE);
+//                    Date comparedTime = cal.getTime();
+//                    return clientSession.getStartTime() > comparedTime.getTime();
+//                }
+//            };
+//            Collection<ClientSession> filteredByRemoveList = Collections2.filter(clientSessions, removedPredicate);
+//            Collection<ClientSession> clientSessionCollections = Collections2.filter(filteredByRemoveList, payedPredicate);
+//            Collection<ClientSession> filteredByDateCollections = Collections2.filter(clientSessionCollections, datePointPredicate);
+//            ArrayList<ClientSession> filteredCollections = new ArrayList<>(filteredByDateCollections);
+//            Collections.sort(filteredCollections);
             transaction.commit();
-            return filteredCollections;
+//            List<ClientSession> result = new ArrayList<>();
+//            Mapper mapper = new DozerBeanMapper();
+//            for (ClientSession clientSession : clientSessions) {
+//                result.add(mapper.map(clientSession, ClientSession.class));
+//            }
+            return clientSessions;
         } catch (HibernateException e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -712,6 +746,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             ClientSession clientSessionFromDb = (ClientSession) session.get(clientSession.getClass(), clientSession.getId());
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.STARTED);
             clientSessionFromDb.setStartTime(clientSession.getStartTime());
+            session.update(clientSessionFromDb);
             transaction.commit();
             return getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), toShowRemoved, toShowPayed);
         } catch (HibernateException e) {
