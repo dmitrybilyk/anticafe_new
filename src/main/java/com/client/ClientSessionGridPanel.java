@@ -415,7 +415,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
 
             @Override
             public void onSuccess(List<ClientSession> result) {
-//              setNameFree(clientSession);
+              setNameFree(clientSession);
               updateListDataProviderOnSuccess(result);
 //              clientSessionDataGrid.setVisibleRange(0, listDataProvider.getList().size());
 //              DecoratedPopupPanel decoratedPopupPanel = new DecoratedPopupPanel();

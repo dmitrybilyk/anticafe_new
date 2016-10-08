@@ -10,6 +10,7 @@ import com.shared.model.SessionPseudoName;
 import com.shared.model.SettingsHolder;
 import com.shared.model.User;
 import com.shared.utils.UserUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
 import org.hibernate.HibernateException;
@@ -271,15 +272,12 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
                 @Override
                 public boolean apply(ClientSession clientSession) {
                     Date comparedDate = new Date();
-                    long comparedTime;
                     Calendar c = Calendar.getInstance();
                     c.setTime(comparedDate);
                     c.add(Calendar.DATE, datePoint.getShiftValue());
-                    c.set(Calendar.HOUR, 0);
-                    c.set(Calendar.MINUTE, 0);
-                    c.set(Calendar.SECOND, 0);
-                    comparedTime = c.getTime().getTime();
-                    return clientSession.getStartTime() > comparedTime;
+                    Calendar cal = DateUtils.truncate(c, Calendar.DATE);
+                    Date comparedTime = cal.getTime();
+                    return clientSession.getStartTime() > comparedTime.getTime();
                 }
             };
             Collection<ClientSession> filteredByRemoveList = Collections2.filter(clientSessions, removedPredicate);

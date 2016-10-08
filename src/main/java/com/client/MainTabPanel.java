@@ -182,8 +182,8 @@ public class MainTabPanel extends TabLayoutPanel {
       }
     });
 
-    eastButtonsPanel.add(userNameBox);
-    eastButtonsPanel.add(addUserButton);
+//    eastButtonsPanel.add(userNameBox);
+//    eastButtonsPanel.add(addUserButton);
 
     splitLayoutPanel.addEast(eastButtonsPanel, 250);
 //    eastButtonsPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
