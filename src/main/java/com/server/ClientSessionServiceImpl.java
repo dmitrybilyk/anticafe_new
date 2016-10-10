@@ -65,7 +65,7 @@ public class ClientSessionServiceImpl extends RemoteServiceServlet implements Cl
     }
 
     @Override
-    public List<ClientSession> getClientSessions(DatePoint datePoint, User currentUser, boolean isShowRemoved, boolean showPayedOn) {
+    public List<ClientSession> getClientSessions(DatePoint datePoint, long currentUser, boolean isShowRemoved, boolean showPayedOn) {
         return clientSessionDao.getClientSessionsList(datePoint, currentUser, isShowRemoved, showPayedOn);
     }
 
@@ -122,5 +122,10 @@ public class ClientSessionServiceImpl extends RemoteServiceServlet implements Cl
     @Override
     public List<ClientSession> unlimClientSession(DatePoint currentDatePointValue, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed) {
         return clientSessionDao.unlimClientSession(currentDatePointValue, clientSession, toShowRemoved, toShowPayed);
+    }
+
+    @Override
+    public void updateName(String oldName, String newName, Long userId) {
+        clientSessionDao.updateName(oldName, newName, userId);
     }
 }

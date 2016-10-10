@@ -28,8 +28,8 @@
   <!-- Specify the app entry point class.                         -->
   <entry-point class='com.client.anticafe'/>
 
-  <set-configuration-property name="gin.ginjector.extensions"
-                              value="some.package.client.GinjectorExtensions"/>
+  <!--<set-configuration-property name="gin.ginjector.extensions"-->
+                              <!--value="some.package.client.GinjectorExtensions"/>-->
 
   <!-- Specify the paths for translatable code                    -->
   <source path='client'/>

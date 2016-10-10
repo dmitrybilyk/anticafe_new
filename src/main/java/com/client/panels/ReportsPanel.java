@@ -53,7 +53,7 @@ public class ReportsPanel extends VerticalPanel{
 
     private void createTable() {
         final DataTable data = DataTable.create();
-        clientSessionService.getClientSessions(DatePoint.ALL, UserUtils.INSTANCE.getCurrentUser(), true, true,
+        clientSessionService.getClientSessions(DatePoint.ALL, UserUtils.currentUser.getUserId(), true, true,
                 new AsyncCallback<List<ClientSession>>() {
                     @Override
                     public void onFailure(Throwable caught) {

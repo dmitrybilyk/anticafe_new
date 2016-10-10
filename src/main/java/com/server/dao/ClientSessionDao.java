@@ -37,7 +37,7 @@ public interface ClientSessionDao {
 
     List<ClientSession> removeClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean showPayedOn);
 
-    List<ClientSession> getClientSessionsList(DatePoint datePoint, User currentUser, boolean isShowRemoved, boolean showPayedOn);
+    List<ClientSession> getClientSessionsList(DatePoint datePoint, long currentUser, boolean isShowRemoved, boolean showPayedOn);
 
     void saveMoreLessModels(List<MoreLessUnlimModel> moreLessUnlimModels, Long userId);
 
@@ -60,4 +60,6 @@ public interface ClientSessionDao {
     List<ClientSession> startClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed);
 
     List<ClientSession> unlimClientSession(DatePoint currentDatePointValue, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed);
+
+    void updateName(String oldName, String newName, Long userId);
 }

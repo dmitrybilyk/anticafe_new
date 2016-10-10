@@ -65,7 +65,7 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
   @Override
     public List<ClientSession> saveClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean isShowPayed) {
         Result<Key<ClientSession>> clientSessionResult = ObjectifyService.ofy().save().entity(clientSession);
-        return getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), isShowRemoved, isShowPayed);
+        return getClientSessionsList(datePoint, clientSession.getUserEntity(), isShowRemoved, isShowPayed);
     }
 
     @Override
@@ -75,11 +75,11 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
     @Override
     public List<ClientSession> removeClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean showPayedOn) {
         ObjectifyService.ofy().save().entity(clientSession);
-        return  getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), isShowRemoved, showPayedOn);
+        return  getClientSessionsList(datePoint, clientSession.getUserEntity(), isShowRemoved, showPayedOn);
     }
 
     @Override
-    public List<ClientSession> getClientSessionsList(DatePoint datePoint, User currentUser, boolean isShowRemoved, boolean showPayedOn) {
+    public List<ClientSession> getClientSessionsList(DatePoint datePoint, long currentUser, boolean isShowRemoved, boolean showPayedOn) {
         Date comparedDate = new Date();
         long comparedTime = 0;
         Calendar c = Calendar.getInstance();
@@ -89,7 +89,7 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
         c.set(Calendar.MINUTE, 0);
         c.set(Calendar.SECOND, 0);
         return ObjectifyService.ofy().load().type(ClientSession.class)
-                .filter("userId =", currentUser.getUserId())
+                .filter("userId =", currentUser)
                 .filter("startTime > ", comparedTime).list();
     }
 
@@ -101,14 +101,14 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
   @Override
     public List<ClientSession> stopClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed) {
         ObjectifyService.ofy().save().entity(clientSession);
-        return getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), toShowRemoved,
+        return getClientSessionsList(datePoint, clientSession.getUserEntity(), toShowRemoved,
                 toShowPayed);
     }
 
     @Override
     public List<ClientSession> payClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed) {
         ObjectifyService.ofy().save().entity(clientSession);
-        return getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), toShowRemoved,
+        return getClientSessionsList(datePoint, clientSession.getUserEntity(), toShowRemoved,
                 toShowPayed);
     }
 
@@ -155,14 +155,19 @@ public class ClientSessionNoSqlDaoImpl implements ClientSessionDao{
     @Override
     public List<ClientSession> startClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed) {
         ObjectifyService.ofy().save().entity(clientSession);
-        return getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), toShowRemoved,
+        return getClientSessionsList(datePoint, clientSession.getUserEntity(), toShowRemoved,
                 toShowPayed);
     }
 
     @Override
     public List<ClientSession> unlimClientSession(DatePoint currentDatePointValue, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed) {
         ObjectifyService.ofy().save().entity(clientSession);
-        return getClientSessionsList(currentDatePointValue, UserUtils.INSTANCE.getCurrentUser(), toShowRemoved,
+        return getClientSessionsList(currentDatePointValue, clientSession.getUserEntity(), toShowRemoved,
                 toShowPayed);
     }
+
+  @Override
+  public void updateName(String oldName, String newName, Long userId) {
+
+  }
 }

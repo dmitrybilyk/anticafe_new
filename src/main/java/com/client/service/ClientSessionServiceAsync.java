@@ -30,7 +30,7 @@ public interface ClientSessionServiceAsync {
 
     void removeClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean showPayedOn, AsyncCallback<List<ClientSession>> asyncCallback);
 
-    void getClientSessions(DatePoint datePoint, User currentUser, boolean isShowRemoved, boolean showPayedOn, AsyncCallback<List<ClientSession>> asyncCallback);
+    void getClientSessions(DatePoint datePoint, long currentUser, boolean isShowRemoved, boolean showPayedOn, AsyncCallback<List<ClientSession>> asyncCallback);
 
     void stopClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed, AsyncCallback<List<ClientSession>> asyncCallback);
 
@@ -53,4 +53,6 @@ public interface ClientSessionServiceAsync {
     void startClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed, AsyncCallback<List<ClientSession>> asyncCallback);
 
     void unlimClientSession(DatePoint currentDatePointValue, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed, AsyncCallback<List<ClientSession>> asyncCallback);
+
+    void updateName(String oldName, String newName, Long userId, AsyncCallback<Void> asyncCallback);
 }

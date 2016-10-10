@@ -208,10 +208,10 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
         Transaction transaction = null;
         try {
             transaction = session.beginTransaction();
-                    User user = (User) session.get(User.class, UserUtils.currentUser.getUserId());
+                    User user = (User) session.get(User.class, clientSession.getUserEntity());
             user.getClientSessions().add(clientSession);
-            clientSession.setUserEntity(UserUtils.currentUser.getUserId());
-            clientSession.setStartTime(System.currentTimeMillis());
+            clientSession.setUserEntity(clientSession.getUserEntity());
+//            clientSession.setStartTime(System.currentTimeMillis());
 //
 //            Query nameQuery = session.createQuery("from SessionPseudoName spn where name =:name and user =:userId");
 //            nameQuery.setParameter("name", clientSession.getSessionPseudoName().getName());
@@ -226,7 +226,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
 //            clientSession.getSessionPseudoName().setIsUsed(true);
             session.save(clientSession);
             transaction.commit();
-            return getClientSessionsList(datePoint, UserUtils.currentUser, isShowRemoved, isShowPayed);
+            return getClientSessionsList(datePoint, clientSession.getUserEntity(), isShowRemoved, isShowPayed);
         } catch (HibernateException e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -251,10 +251,11 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             transaction = session.beginTransaction();
             ClientSession clientSessionFromDb = (ClientSession) session.get(clientSession.getClass(), clientSession.getId());
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.REMOVED);
-            clientSessionFromDb.setFinalSum(0l);
-            markNameAsFree(clientSession.getSessionPseudoName().getName(), UserUtils.currentUser.getUserId());
+//            clientSessionFromDb.setFinalSum(0l);
+            clientSessionFromDb.setStopTime(clientSession.getStopTime());
+            markNameAsFree(clientSession.getSessionPseudoName().getName(), clientSession.getUserEntity());
             transaction.commit();
-            return getClientSessionsList(datePoint, UserUtils.currentUser, isShowRemoved, showPayedOn);
+            return getClientSessionsList(datePoint, clientSession.getUserEntity(), isShowRemoved, showPayedOn);
         } catch (HibernateException e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -267,7 +268,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
     }
 
     @Override
-    public List<ClientSession> getClientSessionsList(final DatePoint datePoint, User currentUser, final boolean isShowRemoved, final boolean showPayedOn) {
+    public List<ClientSession> getClientSessionsList(final DatePoint datePoint, long currentUserId, final boolean isShowRemoved, final boolean showPayedOn) {
         Session session = HibernateAnnotationUtil.getSessionFactory().openSession();
         Transaction transaction = null;
         try {
@@ -290,12 +291,12 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             Calendar cal = DateUtils.truncate(c, Calendar.DATE);
             Date comparedTime = cal.getTime();
 
-            String dateQuery = " and startTime >:comparedTime ";
+            String dateQuery = " and creationTime >:comparedTime ";
             queryString.append(dateQuery);
             String orderQuery = " order by creationTime DESC";
             queryString.append(orderQuery);
             Query query = session.createQuery(queryString.toString());
-            query.setParameter("currentUserId", currentUser.getUserId());
+            query.setParameter("currentUserId", currentUserId);
             if (!isShowRemoved) {
                 query.setParameter("removedStatus", ClientSession.SESSION_STATUS.REMOVED);
             }
@@ -384,9 +385,10 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             ClientSession clientSessionFromDb = (ClientSession) session.get(clientSession.getClass(), clientSession.getId());
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.STOPPED);
             clientSessionFromDb.setStopTime(clientSession.getStopTime());
+            clientSessionFromDb.setFinalTime(clientSession.getFinalTime());
             clientSessionFromDb.setFinalSum(clientSession.getFinalSum());
             transaction.commit();
-            return getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), toShowRemoved, toShowPayed);
+            return getClientSessionsList(datePoint, clientSession.getUserEntity(), toShowRemoved, toShowPayed);
         } catch (HibernateException e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -406,9 +408,11 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             transaction = session.beginTransaction();
             ClientSession clientSessionFromDb = (ClientSession) session.get(clientSession.getClass(), clientSession.getId());
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.PAYED);
-            markNameAsFree(clientSessionFromDb.getSessionPseudoName().getName(), UserUtils.currentUser.getUserId());
+            clientSessionFromDb.setFinalSum(clientSession.getFinalSum());
+            clientSessionFromDb.setStopTime(clientSession.getStopTime());
+            markNameAsFree(clientSessionFromDb.getSessionPseudoName().getName(), clientSession.getUserEntity());
             transaction.commit();
-            return getClientSessionsList(datePoint, UserUtils.currentUser, toShowRemoved, toShowPayed);
+            return getClientSessionsList(datePoint, clientSession.getUserEntity(), toShowRemoved, toShowPayed);
         } catch (HibernateException e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -768,9 +772,11 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             ClientSession clientSessionFromDb = (ClientSession) session.get(clientSession.getClass(), clientSession.getId());
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.STARTED);
             clientSessionFromDb.setStartTime(clientSession.getStartTime());
+            clientSessionFromDb.setStopTime(clientSession.getStopTime());
+            clientSessionFromDb.setPausedTimeSum(clientSession.getPausedTimeSum());
             session.update(clientSessionFromDb);
             transaction.commit();
-            return getClientSessionsList(datePoint, UserUtils.INSTANCE.getCurrentUser(), toShowRemoved, toShowPayed);
+            return getClientSessionsList(datePoint, clientSession.getUserEntity(), toShowRemoved, toShowPayed);
         } catch (HibernateException e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -793,7 +799,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             clientSessionFromDb.setStopTime(clientSession.getStopTime());
             clientSessionFromDb.setFinalSum(clientSession.getFinalSum());
             transaction.commit();
-            return getClientSessionsList(currentDatePointValue, UserUtils.INSTANCE.getCurrentUser(), toShowRemoved, toShowPayed);
+            return getClientSessionsList(currentDatePointValue, clientSession.getUserEntity(), toShowRemoved, toShowPayed);
         } catch (HibernateException e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -803,6 +809,37 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             session.close();
         }
         return null;
+    }
+
+    @Override
+    public void updateName(String oldName, String newName, Long userId) {
+        Session session = HibernateAnnotationUtil.getSessionFactory().openSession();
+        Transaction transaction = null;
+        try {
+            transaction = session.beginTransaction();
+            Query nameQuery = session.createQuery("from SessionPseudoName spn where name =:name and userEntity =:userId");
+            nameQuery.setParameter("name", oldName);
+            nameQuery.setParameter("userId", userId);
+            SessionPseudoName sessionPseudoName = (SessionPseudoName) nameQuery.uniqueResult();
+            sessionPseudoName.setName(newName);
+            Query clientSessionsQuery = session.createQuery("from ClientSession");
+//            clientSessionsQuery.setParameter("pseudoName", oldName);
+            List<ClientSession> clientSessions = clientSessionsQuery.list();
+            for (ClientSession clientSession: clientSessions) {
+                if (clientSession.getSessionPseudoName().equals(oldName)) {
+                    clientSession.setSessionPseudoName(sessionPseudoName);
+                }
+            }
+            session.saveOrUpdate(sessionPseudoName);
+            transaction.commit();
+        } catch (HibernateException e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
     }
 
 //    private long getMaxId() {

@@ -33,7 +33,7 @@ public interface ClientSessionService extends RemoteService {
 
     List<ClientSession> removeClientSession(DatePoint datePoint, ClientSession clientSession, boolean isShowRemoved, boolean showPayedOn);
 
-    List<ClientSession> getClientSessions(DatePoint datePoint, User currentUser, boolean isShowRemoved, boolean showPayedOn);
+    List<ClientSession> getClientSessions(DatePoint datePoint, long currentUser, boolean isShowRemoved, boolean showPayedOn);
 
     void saveMoreLessModels(List<MoreLessUnlimModel> moreLessUnlimModels, Long userId);
 
@@ -56,4 +56,6 @@ public interface ClientSessionService extends RemoteService {
     List<ClientSession> startClientSession(DatePoint datePoint, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed);
 
     List<ClientSession> unlimClientSession(DatePoint currentDatePointValue, ClientSession clientSession, boolean toShowRemoved, boolean toShowPayed);
+
+    void updateName(String oldName, String newName, Long userId);
 }

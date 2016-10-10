@@ -1,5 +1,6 @@
 package com.client.panels;
 
+import com.client.events.UpdateNameEvent;
 import com.client.events.UserLoggedInEvent;
 import com.client.events.UserLoggedInHandler;
 import com.client.gin.Injector;
@@ -45,12 +46,14 @@ import java.util.Map;
 public class SettingsPanel extends SplitLayoutPanel {
 //    @Inject
 //    private SimpleEventBus eventBus;
+    private int selectedName = -1;
     private ClientSessionServiceAsync clientSessionService = GWT.create(ClientSessionService.class);
     HourSettingsWidget hourSettingsWidget;
     MoreLessUnlimWidget moreLessUnlimWidget;
 //    private FormPanel formPanel = new FormPanel();
 //    VerticalPanel mainPanel = new VerticalPanel();
-    public SettingsPanel() {
+    @Inject
+    public SettingsPanel(final SimpleEventBus eventBus) {
         super();
 //        super(Style.Unit.PX);
         VerticalPanel costSettingsVerticalPanel = new VerticalPanel();
@@ -97,8 +100,12 @@ public class SettingsPanel extends SplitLayoutPanel {
         HorizontalPanel addNamePanel = new HorizontalPanel();
         Label newNameLabel = new Label("Новое имя: ");
         final TextBox namesTextBox = new TextBox();
+        final Button saveNameButton = new Button("Сохранить");
+
         addNamePanel.add(newNameLabel);
         addNamePanel.add(namesTextBox);
+        addNamePanel.add(saveNameButton);
+        saveNameButton.setVisible(false);
         pseudoNamesSettingsPanel.add(addNamePanel);
         HorizontalPanel existingNamesPanel = new HorizontalPanel();
         Label existingNamesLabel = new Label("Существующие имена: ");
@@ -120,7 +127,7 @@ public class SettingsPanel extends SplitLayoutPanel {
                 }//To change body of implemented methods use File | Settings | File Templates.
             }
         });
-        Button addNameButton = new Button("Добавить имя");
+        Button addNameButton = new Button("Добавить");
         addNameButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -158,7 +165,48 @@ public class SettingsPanel extends SplitLayoutPanel {
             }
 
         });
-        Button removeNameButton = new Button("Удалить имя");
+
+        Button editNameButton = new Button("Редактировать");
+        editNameButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                selectedName = namesBox.getSelectedIndex();
+                namesTextBox.setValue(namesBox.getSelectedValue());
+                saveNameButton.setVisible(true);
+            }
+        });
+
+        saveNameButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                String oldName = namesBox.getItemText(selectedName);
+                final String namesTextBoxValue = namesTextBox.getValue();
+                namesTextBox.setValue(null);
+                clientSessionService.updateName(oldName, namesTextBoxValue, UserUtils.currentUser.getUserId(), new AsyncCallback<Void>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(Void result) {
+                        namesBox.removeItem(selectedName);
+                        if (namesTextBoxValue != null) {
+                            namesBox.addItem(namesTextBoxValue);
+                        }
+                        DecoratedPopupPanel decoratedPopupPanel = new DecoratedPopupPanel();
+                        decoratedPopupPanel.center();
+                        decoratedPopupPanel.setAutoHideEnabled(true);
+                        decoratedPopupPanel.setWidget(new HTML("Имя изменено"));
+                        decoratedPopupPanel.show();
+                        eventBus.fireEvent(new UpdateNameEvent());
+                    }
+                });
+                saveNameButton.setVisible(false);
+            }
+        });
+
+        Button removeNameButton = new Button("Удалить");
         removeNameButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -198,6 +246,7 @@ public class SettingsPanel extends SplitLayoutPanel {
 //        add(namesBox);
         HorizontalPanel buttonsPanel = new HorizontalPanel();
         buttonsPanel.add(addNameButton);
+        buttonsPanel.add(editNameButton);
         buttonsPanel.add(removeNameButton);
         pseudoNamesSettingsPanel.add(buttonsPanel);
         pseudoNamesSettingsPanel.setSpacing(10);

@@ -27,6 +27,9 @@ public class ClientSession implements Serializable, IsSerializable, Comparable<C
   private long creationTime;
   private long startTime;
   private long stopTime;
+  @Column(name = "paused_time")
+  private Long pausedTimeSum = 0l;
+  private long finalTime;
   private long finalSum;
 //  private String sessionPseudoName;
   private SESSION_STATUS status = SESSION_STATUS.CREATED;
@@ -64,7 +67,7 @@ public class ClientSession implements Serializable, IsSerializable, Comparable<C
 
   public enum SESSION_STATUS implements Serializable, IsSerializable {
     CREATED("Создана", "Старт"), STARTED("В процессе", "Стоп"), PAUSED("Приостановлена", "Возобновить"),
-    STOPPED("Остановлена", "Оплачено"), STOPPED_UNLIMITED ("Безлимит", "Оплачено"), PAYED("Оплачена", "Оплачена"), REMOVED("Удалена", "Удалена");
+    STOPPED("Остановлена", "Оплатить"), STOPPED_UNLIMITED ("Безлимит", "Оплатить"), PAYED("Оплачена", "Оплачена"), REMOVED("Удалена", "Удалена");
     private String value;
     private String buttonText;
     private int order;
@@ -131,6 +134,14 @@ public class ClientSession implements Serializable, IsSerializable, Comparable<C
     this.stopTime = stopTime;
   }
 
+  public Long getPausedTimeSum() {
+    return pausedTimeSum;
+  }
+
+  public void setPausedTimeSum(Long pausedTimeSum) {
+    this.pausedTimeSum = pausedTimeSum;
+  }
+
   public long getFinalSum() {
     return finalSum;
   }
@@ -139,7 +150,15 @@ public class ClientSession implements Serializable, IsSerializable, Comparable<C
     this.finalSum = finalSum;
   }
 
-//  public long getUserEntity() {
+  public long getFinalTime() {
+    return finalTime;
+  }
+
+  public void setFinalTime(long finalTime) {
+    this.finalTime = finalTime;
+  }
+
+  //  public long getUserEntity() {
 //    return userEntity;
 //  }
 //
