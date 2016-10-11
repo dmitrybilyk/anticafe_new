@@ -38,7 +38,7 @@ public class ClientSession implements Serializable, IsSerializable, Comparable<C
   private long userEntity;
 
   @Column(unique = false)
-  private SessionPseudoName sessionPseudoName;
+  private String sessionPseudoName;
 //  @Transient
 //  private String pseudoName;
 
@@ -188,12 +188,15 @@ public class ClientSession implements Serializable, IsSerializable, Comparable<C
     this.userEntity = userEntity;
   }
 
-  @OneToOne(cascade = CascadeType.ALL)
-  public SessionPseudoName getSessionPseudoName() {
+  @ManyToOne
+//  @ManyToOne(cascade = CascadeType.ALL)
+  @JoinTable(name = "pseudonames")
+  @JoinColumn(name = "name")
+  public String getSessionPseudoName() {
     return sessionPseudoName;
   }
 
-  public void setSessionPseudoName(SessionPseudoName sessionPseudoName) {
+  public void setSessionPseudoName(String sessionPseudoName) {
     this.sessionPseudoName = sessionPseudoName;
   }
 }

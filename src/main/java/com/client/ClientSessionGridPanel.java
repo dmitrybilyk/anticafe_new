@@ -89,10 +89,10 @@ public class ClientSessionGridPanel extends VerticalPanel {
     if (firstPartSumAmount != null) {
       this.firstPartSumAmount = firstPartSumAmount;
     }
-    simpleEventBus.addHandler(UpdateNameEvent.TYPE, new UpdateNameEventHandler() {
+    Injector.INSTANCE.getEventBus().addHandler(UpdateNameEvent.TYPE, new UpdateNameEventHandler() {
       @Override
       public void updateSum(UpdateNameEvent updateNameEvent) {
-       reload();
+        reload();
       }
     });
     simpleEventBus.addHandler(ChangeDatePointEvent.TYPE, new ChangeDatePointEventHandler() {
@@ -232,7 +232,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
 
           @Override
           public void onSuccess(SessionPseudoName result) {
-            clientSession.setSessionPseudoName(result);
+            clientSession.setSessionPseudoName(result.getName());
             clientSession.setPausedTimeSum(0l);
             clientSession.setCreationTime(System.currentTimeMillis());
             clientSession.setUserEntity(UserUtils.currentUser.getUserId());
@@ -262,7 +262,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
     Column<ClientSession, String> pseudoNameColumn = new Column<ClientSession, String>(editTextCell) {
       @Override
       public String getValue(ClientSession object) {
-        return object.getSessionPseudoName().getName();
+          return object.getSessionPseudoName();
       }
     };
     clientSessionDataGrid.setColumnWidth(pseudoNameColumn, 200, Style.Unit.PX);
@@ -973,7 +973,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
   }
 
   private void setNameFree(ClientSession clientSession) {
-    clientSessionService.markNameAsFree(clientSession.getSessionPseudoName().getName(), UserUtils.currentUser.getUserId(),  new AsyncCallback<Void>() {
+    clientSessionService.markNameAsFree(clientSession.getSessionPseudoName(), UserUtils.currentUser.getUserId(),  new AsyncCallback<Void>() {
       @Override
       public void onFailure(Throwable caught) {
 
@@ -981,7 +981,8 @@ public class ClientSessionGridPanel extends VerticalPanel {
 
       @Override
       public void onSuccess(Void result) {
-
+        UpdateNameEvent updateNameEvent = new UpdateNameEvent();
+        Injector.INSTANCE.getEventBus().fireEvent(updateNameEvent);
       }
     });
   }

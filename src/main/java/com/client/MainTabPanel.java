@@ -4,6 +4,8 @@ import com.client.events.AddSessionEvent;
 import com.client.events.ChangeDatePointEvent;
 import com.client.events.ToggleShowPayedEvent;
 import com.client.events.ToggleShowRemovedEvent;
+import com.client.events.UpdateNameEvent;
+import com.client.events.UpdateNameEventHandler;
 import com.client.events.UserLoggedInEvent;
 import com.client.events.UserLoggedInHandler;
 import com.client.gin.Injector;
@@ -25,6 +27,7 @@ import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DecoratedPopupPanel;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -32,7 +35,9 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.MultiWordSuggestOracle;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
+import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.ToggleButton;
@@ -44,6 +49,7 @@ import com.shared.model.SessionPseudoName;
 import com.shared.utils.UserUtils;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -54,8 +60,11 @@ public class MainTabPanel extends TabLayoutPanel {
 //  private SimpleEventBus eventBus;
   ToggleButton showRemovedButton;
   ToggleButton showPayedButton;
-//  Label sumLabel;
+  SuggestBox suggestBox;
+  MultiWordSuggestOracle oracle;
+  //  Label sumLabel;
   ListBox datePointListBox;
+  public List<SessionPseudoName> existingNames;
   private final ClientSessionServiceAsync clientSessionService = GWT.create(ClientSessionService.class);
   /**
    * Creates an empty tab panel.
@@ -64,6 +73,14 @@ public class MainTabPanel extends TabLayoutPanel {
   @Inject
   public MainTabPanel(final EventBus eventBus) {
     super(2.5, Style.Unit.EM);
+
+    eventBus.addHandler(UpdateNameEvent.TYPE, new UpdateNameEventHandler() {
+      @Override
+      public void updateSum(UpdateNameEvent updateNameEvent) {
+        loadNames();
+      }
+    });
+
     datePointListBox = new ListBox();
     for (DatePoint datePoint : DatePoint.values()) {
       datePointListBox.addItem(datePoint.getText());
@@ -115,24 +132,66 @@ public class MainTabPanel extends TabLayoutPanel {
     showRemovedButton.setDown(UserUtils.getSettings().isToShowRemoved());
     VerticalPanel eastButtonsPanel = new VerticalPanel();
 
+    oracle = new MultiWordSuggestOracle();
+//    oracle.setComparator(new Comparator<String>() {
+//      @Override
+//      public int compare(String o1, String o2) {
+//        return containsIgnoreCase(o2, o1) ? 1 : -1;
+//      }
+//    });
+    suggestBox = new SuggestBox(oracle);
+
+    loadNames();
+
     Button addButton = new Button("Добавить сессию");
     addButton.setHeight("70px");
     addButton.setWidth("230px");
     addButton.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
+        final String value = suggestBox.getValue();
+        if (value != null && isNameFree(value)) {
+          final AddSessionEvent addSessionEvent = new AddSessionEvent();
+          addSessionEvent.setClientPseudoName(value);
+          Injector.INSTANCE.getEventBus().fireEvent(addSessionEvent);
+        } else if (value != null && !value.isEmpty()) {
+          SessionPseudoName sessionPseudoName = new SessionPseudoName();
+          sessionPseudoName.setUserEntity(UserUtils.currentUser.getUserId());
+          sessionPseudoName.setName(value);
+          sessionPseudoName.setIsUsed(true);
+          clientSessionService.addName(sessionPseudoName, new AsyncCallback<Void>() {
+            @Override
+            public void onFailure(Throwable caught) {
 
-        DialogBox dialogBox = createDialogBox();
-        dialogBox.center();
-        dialogBox.setModal(true);
-        dialogBox.setText("Выбор псевдонима");
-        dialogBox.setSize("200px", "150px");
-//        firstPartTimeLength = UserUtils.INSTANCE.getCurrentUser().getSettings().getFirstPartLength();
-//        firstPartSumAmount = UserUtils.INSTANCE.getCurrentUser().getSettings().getFirstPartSumAmount();
-        dialogBox.show();
+            }
+
+            @Override
+            public void onSuccess(Void result) {
+              final AddSessionEvent addSessionEvent = new AddSessionEvent();
+              addSessionEvent.setClientPseudoName(value);
+              Injector.INSTANCE.getEventBus().fireEvent(addSessionEvent);
+              DecoratedPopupPanel decoratedPopupPanel = new DecoratedPopupPanel();
+              decoratedPopupPanel.center();
+              decoratedPopupPanel.setAutoHideEnabled(true);
+              decoratedPopupPanel.setWidget(new HTML("Имя добавлено"));
+              decoratedPopupPanel.show();
+            }
+          });
+        } else {
+          DialogBox dialogBox = createDialogBox();
+          dialogBox.center();
+          dialogBox.setModal(true);
+          dialogBox.setText("Выбор псевдонима");
+          dialogBox.setSize("150px", "100px");
+          dialogBox.show();
+
+        }
+        loadNames();
+        suggestBox.setValue(null);
       }
     });
 
+    eastButtonsPanel.add(suggestBox);
     eastButtonsPanel.add(addButton);
 
     eastButtonsPanel.getElement().getStyle().setMargin(3, Style.Unit.PX);
@@ -251,6 +310,64 @@ public class MainTabPanel extends TabLayoutPanel {
 
   }
 
+  private boolean isNameExists(String value) {
+    for (SessionPseudoName sessionPseudoName : existingNames) {
+      if (value.equalsIgnoreCase(sessionPseudoName.getName())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean containsIgnoreCase(String src, String what) {
+    final int length = what.length();
+    if (length == 0)
+      return true; // Empty string is contained
+
+    final char firstLo = Character.toLowerCase(what.charAt(0));
+    final char firstUp = Character.toUpperCase(what.charAt(0));
+
+    for (int i = src.length() - length; i >= 0; i--) {
+      // Quick check before calling the more expensive regionMatches() method:
+      final char ch = src.charAt(i);
+      if (ch != firstLo && ch != firstUp)
+        continue;
+
+      if (src.regionMatches(true, i, what, 0, length))
+        return true;
+    }
+
+    return false;
+  }
+
+  private boolean isNameFree(String value) {
+    for (SessionPseudoName sessionPseudoName : existingNames) {
+      if (value.equalsIgnoreCase(sessionPseudoName.getName()) && !sessionPseudoName.isUsed()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void loadNames() {
+        clientSessionService.getAllPseudoNames(UserUtils.currentUser.getUserId(), new AsyncCallback<List<SessionPseudoName>>() {
+          @Override
+          public void onFailure(Throwable caught) {
+
+          }
+
+          @Override
+          public void onSuccess(List<SessionPseudoName> result) {
+            for (SessionPseudoName sessionPseudoName : result) {
+              if (!sessionPseudoName.isUsed()) {
+                oracle.add(sessionPseudoName.getName());
+              }
+            }
+            existingNames = result;
+          }
+        });
+  }
+
   private DialogBox createDialogBox() {
     // Create a dialog box and set the caption text
     final DialogBox dialogBox = new DialogBox();
@@ -293,21 +410,9 @@ public class MainTabPanel extends TabLayoutPanel {
       public void onClick(ClickEvent clickEvent) {
         final AddSessionEvent event = new AddSessionEvent();
         event.setClientPseudoName(namesListBox.getSelectedValue());
-//        clientSessionService.markNameAsUsed(namesListBox.getSelectedValue(),
-//                UserUtils.currentUser.getUserEntity(), new AsyncCallback<Void>() {
-//          @Override
-//          public void onFailure(Throwable caught) {
-//
-//          }
-//
-//          @Override
-//          public void onSuccess(Void result) {
-//            simpleEventBus.fireEvent(event);
-//          }
-//        });
         Injector.INSTANCE.getEventBus().fireEvent(event);
         //To change body of implemented methods use File | Settings | File Templates.
-        dialogBox.hide();
+//        dialogBox.hide();
       }
     });
     Button cancelButton = new Button("Отмена");

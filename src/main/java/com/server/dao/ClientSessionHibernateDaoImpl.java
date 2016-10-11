@@ -56,7 +56,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
         testClientSession.setUserEntity(testUser.getUserId());
         session.save(testClientSession);
         removedTestSessionPseudoName12.setName("testName" + testClientSession.getId());
-        testClientSession.setSessionPseudoName(removedTestSessionPseudoName12);
+        testClientSession.setSessionPseudoName(removedTestSessionPseudoName12.getName());
     }
 
     @Override
@@ -65,7 +65,8 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
         Transaction transaction = null;
         try {
             transaction = session.beginTransaction();
-            Query query = session.createQuery("from com.shared.model.SessionPseudoName where userEntity = :userId and isUsed = false");
+            Query query = session.createQuery("from com.shared.model.SessionPseudoName where userEntity = :userId and isUsed = false " +
+                    "order by name ASC");
             query.setParameter("userId", userId);
             List<SessionPseudoName> sessionPseudoNames = query.list();
             transaction.commit();
@@ -253,7 +254,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.REMOVED);
 //            clientSessionFromDb.setFinalSum(0l);
             clientSessionFromDb.setStopTime(clientSession.getStopTime());
-            markNameAsFree(clientSession.getSessionPseudoName().getName(), clientSession.getUserEntity());
+            markNameAsFree(clientSession.getSessionPseudoName(), clientSession.getUserEntity());
             transaction.commit();
             return getClientSessionsList(datePoint, clientSession.getUserEntity(), isShowRemoved, showPayedOn);
         } catch (HibernateException e) {
@@ -410,7 +411,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.PAYED);
             clientSessionFromDb.setFinalSum(clientSession.getFinalSum());
             clientSessionFromDb.setStopTime(clientSession.getStopTime());
-            markNameAsFree(clientSessionFromDb.getSessionPseudoName().getName(), clientSession.getUserEntity());
+            markNameAsFree(clientSessionFromDb.getSessionPseudoName(), clientSession.getUserEntity());
             transaction.commit();
             return getClientSessionsList(datePoint, clientSession.getUserEntity(), toShowRemoved, toShowPayed);
         } catch (HibernateException e) {
@@ -582,7 +583,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
         Transaction transaction = null;
         try {
             transaction = session.beginTransaction();
-//            populateDB(session);
+            populateDB(session);
 //            session.flush();
 
             Query query = session.createQuery("from com.shared.model.User as u where u.userName=:userName");
@@ -822,15 +823,17 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             nameQuery.setParameter("userId", userId);
             SessionPseudoName sessionPseudoName = (SessionPseudoName) nameQuery.uniqueResult();
             sessionPseudoName.setName(newName);
-            Query clientSessionsQuery = session.createQuery("from ClientSession");
-//            clientSessionsQuery.setParameter("pseudoName", oldName);
+            session.saveOrUpdate(sessionPseudoName);
+
+            Query clientSessionsQuery = session.createQuery("from ClientSession where sessionPseudoName =:name");
+            clientSessionsQuery.setParameter("name", oldName);
             List<ClientSession> clientSessions = clientSessionsQuery.list();
             for (ClientSession clientSession: clientSessions) {
                 if (clientSession.getSessionPseudoName().equals(oldName)) {
-                    clientSession.setSessionPseudoName(sessionPseudoName);
+                    clientSession.setSessionPseudoName(newName);
                 }
+            session.update(clientSession);
             }
-            session.saveOrUpdate(sessionPseudoName);
             transaction.commit();
         } catch (HibernateException e) {
             if (transaction != null) {

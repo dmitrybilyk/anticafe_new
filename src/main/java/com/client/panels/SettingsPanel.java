@@ -10,10 +10,15 @@ import com.client.widgets.HourSettingsWidget;
 import com.client.widgets.MoreLessUnlimWidget;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.event.logical.shared.SelectionEvent;
+import com.google.gwt.event.logical.shared.SelectionHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -50,6 +55,7 @@ public class SettingsPanel extends SplitLayoutPanel {
     private ClientSessionServiceAsync clientSessionService = GWT.create(ClientSessionService.class);
     HourSettingsWidget hourSettingsWidget;
     MoreLessUnlimWidget moreLessUnlimWidget;
+    MultiWordSuggestOracle oracle;
 //    private FormPanel formPanel = new FormPanel();
 //    VerticalPanel mainPanel = new VerticalPanel();
     @Inject
@@ -98,8 +104,10 @@ public class SettingsPanel extends SplitLayoutPanel {
         Label namesLabel = new Label("Настройки псевдонимов:");
         pseudoNamesSettingsPanel.add(namesLabel);
         HorizontalPanel addNamePanel = new HorizontalPanel();
-        Label newNameLabel = new Label("Новое имя: ");
+        Label newNameLabel = new Label("Имя: ");
+        oracle = new MultiWordSuggestOracle();
         final TextBox namesTextBox = new TextBox();
+
         final Button saveNameButton = new Button("Сохранить");
 
         addNamePanel.add(newNameLabel);
@@ -110,6 +118,39 @@ public class SettingsPanel extends SplitLayoutPanel {
         HorizontalPanel existingNamesPanel = new HorizontalPanel();
         Label existingNamesLabel = new Label("Существующие имена: ");
         final ListBox namesBox = new ListBox();
+//        namesTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+//            @Override
+//            public void onValueChange(ValueChangeEvent<String> event) {
+//                String displayString = event.getValue();
+////                namesBox.setItemSelected(getIndexByName(displayString), true);
+//                namesBox.fireEvent(new SelectionEvent<>());
+//                namesBox.setSelectedIndex(getIndexByName(displayString));
+//            }
+//            private int getIndexByName(String displayString) {
+//                for (int i = 0; i < namesBox.getItemCount(); i++) {
+//                    if (displayString.equals(namesBox.getItemText(i))) {
+//                        return i;
+//                    }
+//                }
+//                return 0;
+//            }
+//        });
+//        namesTextBox.addSelectionHandler(new SelectionHandler<SuggestOracle.Suggestion>() {
+//            @Override
+//            public void onSelection(SelectionEvent<SuggestOracle.Suggestion> event) {
+//                String displayString = event.getSelectedItem().getDisplayString();
+//                namesBox.setValue(getIndexByName(displayString), displayString);
+//            }
+//
+//            private int getIndexByName(String displayString) {
+//                for (int i = 0; i < namesBox.getItemCount(); i++) {
+//                    if (displayString.equals(namesBox.getItemText(i))) {
+//                        return i;
+//                    }
+//                }
+//                return 0;
+//            }
+//        });
         namesBox.setWidth("200px");
         existingNamesPanel.add(existingNamesLabel);
         existingNamesPanel.add(namesBox);
@@ -123,6 +164,7 @@ public class SettingsPanel extends SplitLayoutPanel {
             @Override
             public void onSuccess(List<SessionPseudoName> strings) {
                 for (SessionPseudoName name : strings) {
+                    oracle.add(name.getName());
                     namesBox.addItem(name.getName());
                 }//To change body of implemented methods use File | Settings | File Templates.
             }
@@ -142,17 +184,17 @@ public class SettingsPanel extends SplitLayoutPanel {
                 }
                 clientSessionService.addName(new SessionPseudoName(namesTextBoxValue, UserUtils.currentUser.getUserId()),
                         new AsyncCallback<Void>() {
-                    @Override
-                    public void onFailure(Throwable caught) {
+                            @Override
+                            public void onFailure(Throwable caught) {
 
-                    }
+                            }
 
-                    @Override
-                    public void onSuccess(Void result) {
-                        namesTextBox.setText("");
-                        namesBox.addItem(namesTextBoxValue);
-                    }
-                });
+                            @Override
+                            public void onSuccess(Void result) {
+                                namesTextBox.setText("");
+                                namesBox.addItem(namesTextBoxValue);
+                            }
+                        });
             }
 
             private boolean isNameAlreadyPresent() {
@@ -178,7 +220,7 @@ public class SettingsPanel extends SplitLayoutPanel {
 
         saveNameButton.addClickHandler(new ClickHandler() {
             @Override
-            public void onClick(ClickEvent event) {
+            public void onClick(final ClickEvent event) {
                 String oldName = namesBox.getItemText(selectedName);
                 final String namesTextBoxValue = namesTextBox.getValue();
                 namesTextBox.setValue(null);
@@ -199,7 +241,9 @@ public class SettingsPanel extends SplitLayoutPanel {
                         decoratedPopupPanel.setAutoHideEnabled(true);
                         decoratedPopupPanel.setWidget(new HTML("Имя изменено"));
                         decoratedPopupPanel.show();
-                        eventBus.fireEvent(new UpdateNameEvent());
+                        UpdateNameEvent event1 = new UpdateNameEvent();
+                        event1.setSum(0);
+                        Injector.INSTANCE.getEventBus().fireEvent(event1);
                     }
                 });
                 saveNameButton.setVisible(false);

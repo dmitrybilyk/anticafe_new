@@ -1,5 +1,6 @@
 package com.shared.utils;
 
+import com.shared.model.DatePoint;
 import com.shared.model.HourCostModel;
 import com.shared.model.MoreLessUnlimModel;
 import com.shared.model.SettingsHolder;
