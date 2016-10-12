@@ -1,6 +1,8 @@
 package com.client;
 
 import com.client.events.AddSessionEvent;
+import com.client.events.UpdateNameEvent;
+import com.client.gin.Injector;
 import com.client.service.ClientSessionService;
 import com.client.service.ClientSessionServiceAsync;
 import com.google.gwt.core.client.GWT;
@@ -12,11 +14,15 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.inject.Inject;
 import com.shared.model.ClientSession;
 import com.shared.model.DatePoint;
+import com.shared.model.SessionPseudoName;
 import com.shared.utils.UserUtils;
 
 import java.util.List;
@@ -36,50 +42,57 @@ public class NameSelectWindow extends DialogBox {
 
     @Inject
     public NameSelectWindow(final EventBus eventBus) {
-        verticalPanel = new VerticalPanel();
-        setHeight("350px");
-        setWidth("700px");
-//        setSize("400", "400");
-//        verticalPanel.setSize("300", "300");
-        verticalPanel.setHeight("300px");
-        verticalPanel.setWidth("600px");
+        center();
+        setModal(true);
+        setText("Выбор имени");
+        setSize("150px", "100px");
+        VerticalPanel dialogContents = new VerticalPanel();
+        dialogContents.setSpacing(5);
+        dialogContents.setSize("200px", "150px");
+        dialogContents.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+        dialogContents.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+        this.setWidget(dialogContents);
+
         final ListBox namesListBox = new ListBox();
-        namesListBox.addItem("GREEN");
-        namesListBox.addItem("YELLOW");
-        namesListBox.addItem("BLACK");
-        verticalPanel.add(namesListBox);
-        Button button = new Button("Создать");
-        button.addClickHandler(new ClickHandler() {
+        namesListBox.setWidth("200px");
+        clientSessionService.getFreePseudoNames(UserUtils.currentUser.getUserId(), new AsyncCallback<List<SessionPseudoName>>() {
+            @Override
+            public void onFailure(Throwable caught) {
+
+            }
+
+            @Override
+            public void onSuccess(List<SessionPseudoName> result) {
+                for (SessionPseudoName item : result) {
+                    namesListBox.addItem(item.getName());
+                }
+            }
+        });
+        dialogContents.add(namesListBox);
+        Button createButton = new Button("Создать");
+        createButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
-                AddSessionEvent event = new AddSessionEvent();
+                NameSelectWindow.this.hide();
+                final AddSessionEvent event = new AddSessionEvent();
                 event.setClientPseudoName(namesListBox.getSelectedValue());
-                eventBus.fireEvent(event);//To change body of implemented methods use File | Settings | File Templates.
+                Injector.INSTANCE.getEventBus().fireEvent(event);
+                UpdateNameEvent updateNameEvent = new UpdateNameEvent();
+                Injector.INSTANCE.getEventBus().fireEvent(updateNameEvent);
             }
         });
-        verticalPanel.add(button);
-        Button addEntityButton = new Button("Создать client");
-        button.addClickHandler(new ClickHandler() {
+        Button cancelButton = new Button("Отмена");
+        cancelButton.addClickHandler(new ClickHandler() {
             @Override
-            public void onClick(ClickEvent clickEvent) {
-                 final ClientSession clientSession = new ClientSession(System.currentTimeMillis(),
-                         0, UserUtils.INSTANCE.getCurrentUser().getUserId());
-                 clientSessionService.saveClientSession(DatePoint.TODAY, clientSession, UserUtils.getSettings().isToShowRemoved(),
-                         UserUtils.getSettings().isToShowRemoved(), new AsyncCallback<List<ClientSession>>() {
-                     @Override
-                     public void onFailure(Throwable throwable) {
-                         //To change body of implemented methods use File | Settings | File Templates.
-                     }
-
-                     @Override
-                     public void onSuccess(List<ClientSession> result) {
-//                         clientSession.setId(id);//To change body of implemented methods use File | Settings | File Templates.
-                     }
-                 });
-
+            public void onClick(ClickEvent event) {
+                NameSelectWindow.this.hide();
             }
         });
-        verticalPanel.add(addEntityButton);
+        HorizontalPanel buttonContainer = new HorizontalPanel();
+
+        buttonContainer.add(createButton);
+        buttonContainer.add(cancelButton);
+        dialogContents.add(buttonContainer);
     }
 
 }

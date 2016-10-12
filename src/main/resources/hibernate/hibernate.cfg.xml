@@ -5,12 +5,12 @@
 <hibernate-configuration>
     <session-factory>
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <property name="hibernate.connection.username">postgres</property>
-        <!--<property name="hibernate.connection.username">webadmin</property>-->
-        <property name="hibernate.connection.password">postgres</property>
-        <!--<property name="hibernate.connection.password">QVPmvm33418</property>-->
-        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/timers_db</property>
-        <!--<property name="hibernate.connection.url">jdbc:postgresql://postgres18018-timers.mircloud.host/timers_db</property>-->
+        <!--<property name="hibernate.connection.username">postgres</property>-->
+        <property name="hibernate.connection.username">webadmin</property>
+        <!--<property name="hibernate.connection.password">postgres</property>-->
+        <property name="hibernate.connection.password">QVPmvm33418</property>
+        <!--<property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/timers_db</property>-->
+        <property name="hibernate.connection.url">jdbc:postgresql://postgres18018-timers.mircloud.host/timers_db</property>
         <property name="connection_pool_size">10</property>
         <property name="hbm2ddl.auto">create</property>
         <property name="show_sql">true</property>

@@ -6,6 +6,7 @@ import com.client.events.ToggleShowPayedEvent;
 import com.client.events.ToggleShowRemovedEvent;
 import com.client.events.UpdateNameEvent;
 import com.client.events.UpdateNameEventHandler;
+import com.client.events.UpdateNameOnSettingsEvent;
 import com.client.events.UserLoggedInEvent;
 import com.client.events.UserLoggedInHandler;
 import com.client.gin.Injector;
@@ -178,11 +179,7 @@ public class MainTabPanel extends TabLayoutPanel {
             }
           });
         } else {
-          DialogBox dialogBox = createDialogBox();
-          dialogBox.center();
-          dialogBox.setModal(true);
-          dialogBox.setText("Выбор псевдонима");
-          dialogBox.setSize("150px", "100px");
+          DialogBox dialogBox = Injector.INSTANCE.getNameSelectionWidnow();
           dialogBox.show();
 
         }
@@ -191,7 +188,10 @@ public class MainTabPanel extends TabLayoutPanel {
       }
     });
 
-    eastButtonsPanel.add(suggestBox);
+    HorizontalPanel namePanel = new HorizontalPanel();
+    namePanel.add(new Label("Имя"));
+    namePanel.add(suggestBox);
+    eastButtonsPanel.add(namePanel);
     eastButtonsPanel.add(addButton);
 
     eastButtonsPanel.getElement().getStyle().setMargin(3, Style.Unit.PX);
@@ -358,6 +358,7 @@ public class MainTabPanel extends TabLayoutPanel {
 
           @Override
           public void onSuccess(List<SessionPseudoName> result) {
+            oracle.clear();
             for (SessionPseudoName sessionPseudoName : result) {
               if (!sessionPseudoName.isUsed()) {
                 oracle.add(sessionPseudoName.getName());

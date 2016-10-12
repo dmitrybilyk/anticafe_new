@@ -11,6 +11,7 @@ import com.client.events.ToggleShowRemovedEvent;
 import com.client.events.ToggleShowRemovedEventHandler;
 import com.client.events.UpdateNameEvent;
 import com.client.events.UpdateNameEventHandler;
+import com.client.events.UpdateNameOnSettingsEvent;
 import com.client.events.UpdateSumEvent;
 import com.client.gin.Injector;
 import com.client.service.ClientSessionService;
@@ -24,7 +25,6 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.media.client.Audio;
 import com.google.gwt.resources.client.ImageResource;
@@ -246,6 +246,8 @@ public class ClientSessionGridPanel extends VerticalPanel {
                       @Override
                       public void onSuccess(List<ClientSession> result) {
 //            clientSession.setId(result);
+                        UpdateNameOnSettingsEvent updateNameOnSettingsEvent = new UpdateNameOnSettingsEvent();
+                        Injector.INSTANCE.getEventBus().fireEvent(updateNameOnSettingsEvent);
                         updateListDataProviderOnSuccess(result);
 //                        clientSessionDataGrid.setVisibleRange(0, listDataProvider.getList().size());
                       }
@@ -408,16 +410,16 @@ public class ClientSessionGridPanel extends VerticalPanel {
       @Override
       public void update(int index, final ClientSession clientSession, String value) {
         if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED ||
-                clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED_UNLIMITED ) {
-          clientSession.setStopTime(System.currentTimeMillis());
+                clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED_UNLIMITED) {
+//          clientSession.setStopTime(System.currentTimeMillis());
           clientSession.setStatus(ClientSession.SESSION_STATUS.PAYED);
-          long finalSum = 0;
-          if (SettingsHolder.countStrategy.MULTI_HOURS == UserUtils.getSettings().getCurrentCountStrategy()) {
-            finalSum = getMultiHoursSum(0, clientSession);
-          } else if (SettingsHolder.countStrategy.MULTI_HOURS == UserUtils.getSettings().getCurrentCountStrategy()) {
-            finalSum = getHourMinutestSum(0, clientSession, false);
-          }
-          clientSession.setFinalSum(((finalSum + 99) / 100 ) * 100);
+//          long finalSum = 0;
+//          if (SettingsHolder.countStrategy.MULTI_HOURS == UserUtils.getSettings().getCurrentCountStrategy()) {
+//            finalSum = getMultiHoursSum(0, clientSession);
+//          } else if (SettingsHolder.countStrategy.MULTI_HOURS == UserUtils.getSettings().getCurrentCountStrategy()) {
+//            finalSum = getHourMinutestSum(0, clientSession, false);
+//          }
+          clientSession.setFinalSum(((clientSession.getFinalSum() + 99) / 100) * 100);
 //          clientSession.setFinalSum(finalSum);
           clientSessionService.payClientSession(currentDatePointValue, clientSession, UserUtils.getSettings().isToShowRemoved(),
                   UserUtils.getSettings().isToShowPayed(), new AsyncCallback<List<ClientSession>>() {
@@ -447,6 +449,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
         return clientSession.getSessionStatus().name();
       }
     };
+    clientSessionDataGrid.setColumnWidth(manageButtonsColumn, 130, Style.Unit.PX);
     manageButtonsColumn.setFieldUpdater(new FieldUpdater<ClientSession, String>() {
       @Override
       public void update(final int i, final ClientSession clientSession, String s) {
@@ -465,22 +468,22 @@ public class ClientSessionGridPanel extends VerticalPanel {
           clientSession.setStopTime(0);
           clientSessionService.startClientSession(currentDatePointValue, clientSession, UserUtils.getSettings().isToShowRemoved(),
                   UserUtils.getSettings().isToShowPayed(), new AsyncCallback<List<ClientSession>>() {
-            @Override
-            public void onFailure(Throwable caught) {
+                    @Override
+                    public void onFailure(Throwable caught) {
 
-            }
+                    }
 
-            @Override
-            public void onSuccess(List<ClientSession> result) {
-              updateListDataProviderOnSuccess(result);
+                    @Override
+                    public void onSuccess(List<ClientSession> result) {
+                      updateListDataProviderOnSuccess(result);
 //              clientSessionDataGrid.setVisibleRange(0, listDataProvider.getList().size());
 //              DecoratedPopupPanel decoratedPopupPanel = new DecoratedPopupPanel();
 //              decoratedPopupPanel.center();
 //              decoratedPopupPanel.setAutoHideEnabled(true);
 //              decoratedPopupPanel.setWidget(new HTML(clientSession.getSessionPseudoName() + " стартовал"));
 //              decoratedPopupPanel.show();
-            }
-          });
+                    }
+                  });
         } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STARTED) {
           clientSession.setStopTime(System.currentTimeMillis());
           clientSession.setStatus(ClientSession.SESSION_STATUS.STOPPED);
@@ -515,7 +518,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
 //                      decoratedPopupPanel.show();
                     }
                   });
-        } else if(clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED) {
+        } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED) {
 //          clientSession.setStartTime(System.currentTimeMillis());
           clientSession.setStatus(ClientSession.SESSION_STATUS.STARTED);
 //        if (clientSession.getStopTime() != 0) {
@@ -573,6 +576,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
       }
     });
     clientSessionDataGrid.addColumn(manageButtonsColumn, new TextHeader("Управление"));
+    clientSessionDataGrid.setColumnWidth(payColumn, 130, Style.Unit.PX);
     clientSessionDataGrid.addColumn(payColumn, new TextHeader("Оплата"));
 
 
@@ -609,7 +613,8 @@ public class ClientSessionGridPanel extends VerticalPanel {
         if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.CREATED) {
           return "0.00";
         } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.PAYED ||
-                clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED_UNLIMITED) {
+                clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED_UNLIMITED ||
+                clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.REMOVED) {
           return getPrettyMoney(clientSession.getFinalSum());
         } else if (UserUtils.getSettings().getCurrentCountStrategy() == SettingsHolder.countStrategy.HOUR_MINUTES){
           long startTimeInSeconds = getSeconds(clientSession.getStartTime());
@@ -628,7 +633,8 @@ public class ClientSessionGridPanel extends VerticalPanel {
       }
     }, new TextHeader("Сумма"));
 
-    clientSessionDataGrid.addColumn(new Column<ClientSession, String>(new TextCell(new AbstractSafeHtmlRenderer<String>() {
+    TextHeader statusColumnHeader = new TextHeader("Статус");
+    AbstractSafeHtmlRenderer<String> statusColumnRenderer = new AbstractSafeHtmlRenderer<String>() {
       @Override
       public SafeHtml render(final String value) {
         return new SafeHtml() {
@@ -645,12 +651,18 @@ public class ClientSessionGridPanel extends VerticalPanel {
           }
         };
       }
-    })) {
+    };
+    TextCell statusColumnTextCell = new TextCell(statusColumnRenderer);
+    Column<ClientSession, String> statusColumn = new Column<ClientSession, String>(statusColumnTextCell) {
       @Override
       public String getValue(ClientSession clientSession) {
         return clientSession.getSessionStatus().name();
       }
-    }, new TextHeader("Статус"));
+    };
+    clientSessionDataGrid.setColumnWidth(statusColumn, 130, Style.Unit.PX);
+    clientSessionDataGrid.addColumn(statusColumn, statusColumnHeader);
+
+//    Column<ClientSession, String> statusColumn =
 
     clientSessionDataGrid.addColumn(new Column<ClientSession, ImageResource>(new ImageResourceCell()) {
       @Override
@@ -658,9 +670,13 @@ public class ClientSessionGridPanel extends VerticalPanel {
         if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STARTED) {
           return Images.INSTANCE.progress();
         } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED_UNLIMITED) {
-          return Images.INSTANCE.stopped_unlimited();
-        } else {
-          return Images.INSTANCE.stopped();
+          return Images.INSTANCE.stoppedUnlimited();
+        } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.REMOVED){
+          return Images.INSTANCE.removedSession();
+        } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.PAYED){
+          return Images.INSTANCE.payedSession();
+        }else {
+          return Images.INSTANCE.createdSession();
         }
       }
     });
@@ -676,12 +692,13 @@ public class ClientSessionGridPanel extends VerticalPanel {
         };  //To change body of implemented methods use File | Settings | File Templates.
       }
     }));
-//    buttonCellBase.setIcon(Images.INSTANCE.remove());
+//    buttonCellBase.setIcon(Images.INSTANCE.removedSession());
     buttonCellBase.setDecoration(ButtonCellBase.Decoration.NEGATIVE);
     Column<ClientSession, String> removeColumn = new Column<ClientSession, String>(buttonCellBase) {
       @Override
       public void render(Cell.Context context, ClientSession object, SafeHtmlBuilder sb) {
-        if (object.getSessionStatus() == ClientSession.SESSION_STATUS.STARTED) {
+        if (object.getSessionStatus() == ClientSession.SESSION_STATUS.STARTED ||
+                object.getSessionStatus() == ClientSession.SESSION_STATUS.REMOVED) {
           sb.appendHtmlConstant("<div style='pointer-events: none; opacity: 0.4;'>");
           super.render(context, object, sb);
           sb.appendHtmlConstant("</div>");
@@ -699,7 +716,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
       @Override
       public void update(final int index, final ClientSession clientSession, String value) {
         clientSession.setStatus(ClientSession.SESSION_STATUS.REMOVED);
-        clientSession.setStopTime(System.currentTimeMillis());
+//        clientSession.setStopTime(System.currentTimeMillis());
         clientSessionService.removeClientSession(currentDatePointValue, clientSession, UserUtils.getSettings().isToShowRemoved(),
                 UserUtils.getSettings().isToShowPayed(), new AsyncCallback<List<ClientSession>>() {
           @Override
@@ -864,22 +881,22 @@ public class ClientSessionGridPanel extends VerticalPanel {
     } else {
       long totalSum = firstPartSumAmount + 50 * (timeDifferenceLength - firstPartTimeLength) / 1000 / 60;
       sum += totalSum;
-      if (isSessionOver) {
-        clientSession.setFinalSum(totalSum);
-        clientSessionService.stopClientSession(currentDatePointValue, clientSession, UserUtils.getSettings().isToShowRemoved(),
-                UserUtils.getSettings().isToShowPayed(), new AsyncCallback<List<ClientSession>>() {
-                  @Override
-                  public void onFailure(Throwable caught) {
-
-                  }
-
-                  @Override
-                  public void onSuccess(List<ClientSession> result) {
-                    updateListDataProviderOnSuccess(result);
-//                    clientSessionDataGrid.setVisibleRange(0, listDataProvider.getList().size());
-                  }
-                });
-      }
+//      if (isSessionOver) {
+//        clientSession.setFinalSum(totalSum);
+//        clientSessionService.stopClientSession(currentDatePointValue, clientSession, UserUtils.getSettings().isToShowRemoved(),
+//                UserUtils.getSettings().isToShowPayed(), new AsyncCallback<List<ClientSession>>() {
+//                  @Override
+//                  public void onFailure(Throwable caught) {
+//
+//                  }
+//
+//                  @Override
+//                  public void onSuccess(List<ClientSession> result) {
+//                    updateListDataProviderOnSuccess(result);
+////                    clientSessionDataGrid.setVisibleRange(0, listDataProvider.getList().size());
+//                  }
+//                });
+//      }
     }
     return sum;
   }
@@ -919,6 +936,8 @@ public class ClientSessionGridPanel extends VerticalPanel {
         leftMilliSeconds = difference;
       }
       long totalSum = hoursSum + (leftMilliSeconds * costPerMinute) / 1000 / 60;
+      clientSession.setFinalTime(hoursGone * 60 * 60 * 1000 + leftMilliSeconds);
+      clientSession.setFinalSum(totalSum);
       if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STARTED && totalSum > unlimCost) {
         clientSession.setStopTime(System.currentTimeMillis());
         if (moreLessUnlimModel != null) {
@@ -1022,18 +1041,11 @@ public class ClientSessionGridPanel extends VerticalPanel {
 
 
   private DialogBox createDialogBox() {
-    // Create a dialog box and set the caption text
     final DialogBox dialogBox = new DialogBox();
-
-//        dialogBox.setWidth("400px");
-//        dialogBox.setHeight("400px");
     dialogBox.ensureDebugId("cwDialogBox");
-//        dialogBox.setText("dfd");
-
-    // Create a table to layout the content
     VerticalPanel dialogContents = new VerticalPanel();
     dialogContents.setSpacing(5);
-    dialogContents.setSize("300px", "300px");
+    dialogContents.setSize("200px", "150px");
     dialogContents.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
     dialogContents.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
     dialogBox.setWidget(dialogContents);
@@ -1053,9 +1065,6 @@ public class ClientSessionGridPanel extends VerticalPanel {
         }
       }
     });
-//        namesListBox.addItem("GREEN");
-//        namesListBox.addItem("YELLOW");
-//        namesListBox.addItem("BLACK");
     dialogContents.add(namesListBox);
     Button createButton = new Button("Создать");
     createButton.addClickHandler(new ClickHandler() {
@@ -1063,20 +1072,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
       public void onClick(ClickEvent clickEvent) {
         final AddSessionEvent event = new AddSessionEvent();
         event.setClientPseudoName(namesListBox.getSelectedValue());
-//        clientSessionService.markNameAsUsed(namesListBox.getSelectedValue(), UserUtils.currentUser.getUserEntity(), new AsyncCallback<Void>() {
-//          @Override
-//          public void onFailure(Throwable caught) {
-//
-//          }
-//
-//          @Override
-//          public void onSuccess(Void result) {
-//            simpleEventBus.fireEvent(event);
-//          }
-//        });
         Injector.INSTANCE.getEventBus().fireEvent(event);
-        //To change body of implemented methods use File | Settings | File Templates.
-        dialogBox.hide();
       }
     });
     Button cancelButton = new Button("Отмена");
@@ -1091,37 +1087,6 @@ public class ClientSessionGridPanel extends VerticalPanel {
     buttonContainer.add(createButton);
     buttonContainer.add(cancelButton);
     dialogContents.add(buttonContainer);
-//          Button addEntityButton = new Button("Создать client");
-//          addEntityButton.addClickHandler(new ClickHandler() {
-//            @Override
-//            public void onClick(ClickEvent clickEvent) {
-//              final ClientSession clientSession = new ClientSession(System.currentTimeMillis(),
-//                      0, false, UserUtils.INSTANCE.getCurrentUser());
-//              clientSessionService.saveClientSession(clientSession, new AsyncCallback<Long>() {
-//                @Override
-//                public void onFailure(Throwable throwable) {
-//                  //To change body of implemented methods use File | Settings | File Templates.
-//                }
-//
-//                @Override
-//                public void onSuccess(Long id) {
-//                  clientSession.setId(id);//To change body of implemented methods use File | Settings | File Templates.
-//                }
-//              });
-//
-//            }
-//          });
-//        dialogContents.add(addEntityButton);
-//        if (LocaleInfo.getCurrentLocale().isRTL()) {
-//            dialogContents.setCellHorizontalAlignment(
-//                    closeButton, HasHorizontalAlignment.ALIGN_LEFT);
-//
-//        } else {
-//            dialogContents.setCellHorizontalAlignment(
-//                    closeButton, HasHorizontalAlignment.ALIGN_RIGHT);
-//        }
-
-    // Return the dialog box
     return dialogBox;
   }
 

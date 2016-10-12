@@ -410,7 +410,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             ClientSession clientSessionFromDb = (ClientSession) session.get(clientSession.getClass(), clientSession.getId());
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.PAYED);
             clientSessionFromDb.setFinalSum(clientSession.getFinalSum());
-            clientSessionFromDb.setStopTime(clientSession.getStopTime());
+//            clientSessionFromDb.setStopTime(clientSession.getStopTime());
             markNameAsFree(clientSessionFromDb.getSessionPseudoName(), clientSession.getUserEntity());
             transaction.commit();
             return getClientSessionsList(datePoint, clientSession.getUserEntity(), toShowRemoved, toShowPayed);
@@ -798,6 +798,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             ClientSession clientSessionFromDb = (ClientSession) session.get(clientSession.getClass(), clientSession.getId());
             clientSessionFromDb.setStatus(ClientSession.SESSION_STATUS.STOPPED_UNLIMITED);
             clientSessionFromDb.setStopTime(clientSession.getStopTime());
+            clientSessionFromDb.setFinalTime(clientSession.getFinalTime());
             clientSessionFromDb.setFinalSum(clientSession.getFinalSum());
             transaction.commit();
             return getClientSessionsList(currentDatePointValue, clientSession.getUserEntity(), toShowRemoved, toShowPayed);

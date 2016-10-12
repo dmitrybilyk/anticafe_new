@@ -10,13 +10,19 @@ public interface Images extends ClientBundle {
    @Source("images/progress.gif")
    ImageResource progress();
 
-   @Source("images/remove.png")
-   ImageResource remove();
+   @Source("images/broom.gif")
+   ImageResource removedSession();
 
-   @Source("images/stopped.png")
+   @Source("images/created_session.gif")
    ImageResource stopped();
 
  @Source("images/unlimited.gif")
- ImageResource stopped_unlimited();
+ ImageResource stoppedUnlimited();
+
+ @Source("images/created_session.gif")
+ ImageResource createdSession();
+
+ @Source("images/animated-dollar-sign-gif.gif")
+ ImageResource payedSession();
 
  }

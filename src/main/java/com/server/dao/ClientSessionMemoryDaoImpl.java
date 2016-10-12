@@ -255,7 +255,7 @@ public class ClientSessionMemoryDaoImpl implements ClientSessionDao{
 
     @Override
     public List<SessionPseudoName> removeName(String sessionPseudoName, Long userId) {
-//        return this.pseudoNamesMap.remove(sessionPseudoName);
+//        return this.pseudoNamesMap.removedSession(sessionPseudoName);
         return new ArrayList<>();
     }
 
