@@ -33,7 +33,7 @@ public class anticafe implements EntryPoint {
       Runnable runnable = new Runnable() {
           @Override
           public void run() {
-            RootLayoutPanel.get().getElement().getStyle().setBackgroundColor("navajowhite");
+            RootLayoutPanel.get().getElement().getStyle().setBackgroundColor("khaki");
             RootLayoutPanel.get().add(injector.getLoginPanel());
           }
       };

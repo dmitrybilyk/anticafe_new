@@ -75,7 +75,7 @@ public class MainTabPanel extends TabLayoutPanel {
   public MainTabPanel(final EventBus eventBus) {
     super(2.5, Style.Unit.EM);
 
-    eventBus.addHandler(UpdateNameEvent.TYPE, new UpdateNameEventHandler() {
+    Injector.INSTANCE.getEventBus().addHandler(UpdateNameEvent.TYPE, new UpdateNameEventHandler() {
       @Override
       public void updateSum(UpdateNameEvent updateNameEvent) {
         loadNames();
@@ -128,10 +128,15 @@ public class MainTabPanel extends TabLayoutPanel {
         eventBus.fireEvent(toggleShowRemovedEvent);
       }
     });
-    showRemovedButton.setWidth("230px");
-    showRemovedButton.setHeight("40px");
+    showRemovedButton.setWidth("100px");
+//    showRemovedButton.setHeight("40px");
     showRemovedButton.setDown(UserUtils.getSettings().isToShowRemoved());
     VerticalPanel eastButtonsPanel = new VerticalPanel();
+    eastButtonsPanel.setWidth("100%");
+    eastButtonsPanel.setHeight("100%");
+    eastButtonsPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+    eastButtonsPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+    eastButtonsPanel.setSpacing(5);
 
     oracle = new MultiWordSuggestOracle();
 //    oracle.setComparator(new Comparator<String>() {
@@ -146,7 +151,7 @@ public class MainTabPanel extends TabLayoutPanel {
 
     Button addButton = new Button("Добавить сессию");
     addButton.setHeight("70px");
-    addButton.setWidth("230px");
+    addButton.setWidth("160px");
     addButton.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
@@ -209,8 +214,8 @@ public class MainTabPanel extends TabLayoutPanel {
         eventBus.fireEvent(toggleShowPayedEvent);
       }
     });
-    showPayedButton.setWidth("230px");
-    showPayedButton.setHeight("40px");
+    showPayedButton.setWidth("100px");
+//    showPayedButton.setHeight("40px");
     showPayedButton.setDown(UserUtils.getSettings().isToShowPayed());
     eastButtonsPanel.add(html);
     eastButtonsPanel.add(showPayedButton);

@@ -1,5 +1,6 @@
 package com.client.widgets;
 
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Button;
@@ -27,23 +28,28 @@ public class MoreLessUnlimWidget extends ScrollPanel {
   public MoreLessUnlimWidget() {
     setWidth("100%");
     setHeight("100%");
+    getElement().getStyle().setBorderStyle(Style.BorderStyle.SOLID);
+    getElement().getStyle().setBorderWidth(1, Style.Unit.PX);
 //    setSpacing(3);
 
     VerticalPanel mainPanel = new VerticalPanel();
     mainPanel.setSize("100%", "100%");
     hoursCostsPanel = new VerticalPanel();
-    hoursCostsPanel.setSize("400px", "150px");
+    hoursCostsPanel.setSize("100%", "90%");
     hoursCostsPanel.setSpacing(5);
     mainPanel.add(hoursCostsPanel);
 //    mainPanel.add(new Label("Стоимость минуты, коп.: "));
 //    mainPanel.add(costPerMinuteTextBox);
-    mainPanel.add(new Label("Стоимость безлимита, руб.: "));
-    mainPanel.add(unlimCostTextBox);
-    setAddButtonEnabled(addHourButton);
+    HorizontalPanel unlimCostPanel = new HorizontalPanel();
+    unlimCostPanel.setSpacing(5);
+    unlimCostPanel.add(new Label("Стоимость безлимита, руб.: "));
+    unlimCostPanel.add(unlimCostTextBox);
+    mainPanel.add(unlimCostPanel);
+//    setAddButtonEnabled(addHourButton);
     addHourButton.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
-        setAddButtonEnabled(addHourButton);
+//        setAddButtonEnabled(addHourButton);
         final HorizontalPanel numberHoursCostPanel = new HorizontalPanel();
         numberHoursCostPanel.setSpacing(5);
         numberHoursCostPanel.setWidth("250px");
@@ -69,13 +75,13 @@ public class MoreLessUnlimWidget extends ScrollPanel {
           @Override
           public void onClick(ClickEvent event) {
             numberHoursCostPanel.removeFromParent();
-            setAddButtonEnabled(addHourButton);
+//            setAddButtonEnabled(addHourButton);
           }
         });
         numberHoursCostPanel.add(removeButton);
-        if (hoursCostsPanel.getWidgetCount() < 6) {
-          hoursCostsPanel.add(numberHoursCostPanel);
-        }
+//        if (hoursCostsPanel.getWidgetCount() < 6) {
+        hoursCostsPanel.add(numberHoursCostPanel);
+//        }
       }
     });
 
@@ -115,14 +121,14 @@ public class MoreLessUnlimWidget extends ScrollPanel {
         @Override
         public void onClick(ClickEvent event) {
           numberHoursCostPanel.removeFromParent();
-          setAddButtonEnabled(addHourButton);
+//          setAddButtonEnabled(addHourButton);
         }
       });
       numberHoursCostPanel.add(removeButton);
       if (hoursCostsPanel.getWidgetCount() < 6) {
         hoursCostsPanel.add(numberHoursCostPanel);
       }
-      setAddButtonEnabled(addHourButton);
+//      setAddButtonEnabled(addHourButton);
       unlimCostTextBox.setValue(moreLessUnlimModel.getUnlimCost() != 0 ? String.valueOf(moreLessUnlimModel.getUnlimCost()) : "0");
 //      costPerMinuteTextBox.setValue(moreLessUnlimModel.getCostPerMinute() != 0 ? String.valueOf(moreLessUnlimModel.getCostPerMinute()) : "0");
     }
@@ -137,6 +143,12 @@ public class MoreLessUnlimWidget extends ScrollPanel {
           Widget childWidget = horizontalPanel.getWidget(j);
           if (childWidget instanceof AntiTextBox) {
             if (((AntiTextBox) childWidget).getValue() == null || ((AntiTextBox) childWidget).getValue().isEmpty() ) {
+              return false;
+            }
+          }
+          if (childWidget instanceof AntiMoneyTextBox) {
+            if (((AntiMoneyTextBox) childWidget).getValue() == null || ((AntiMoneyTextBox) childWidget).getValue().isEmpty()  ||
+                    "0".equals(((AntiMoneyTextBox) childWidget).getValue())) {
               return false;
             }
           }
@@ -172,9 +184,9 @@ public class MoreLessUnlimWidget extends ScrollPanel {
     return true;
   }
 
-  private void setAddButtonEnabled(Button addHourButton) {
-    addHourButton.setEnabled(hoursCostsPanel.getWidgetCount() < 7);
-  }
+//  private void setAddButtonEnabled(Button addHourButton) {
+//    addHourButton.setEnabled(hoursCostsPanel.getWidgetCount() < 7);
+//  }
 
   public Map<Long, MoreLessUnlimModel> getSettings() {
     Map<Long, MoreLessUnlimModel> moreLessUnlimModelMap = new HashMap<>();

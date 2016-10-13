@@ -24,7 +24,10 @@ public class AntiMoneyTextBox extends AntiTextBox {
   @Override
   public String getValue() {
     String superValue = super.getValue();
-    long value = new BigDecimal(superValue).multiply(new BigDecimal("100")).longValue();
+    long value = 0;
+    if (superValue != null && !superValue.isEmpty()) {
+      value = new BigDecimal(superValue).multiply(new BigDecimal("100")).longValue();
+    }
     return String.valueOf(value);
   }
 }

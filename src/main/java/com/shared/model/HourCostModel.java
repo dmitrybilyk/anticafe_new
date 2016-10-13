@@ -1,17 +1,17 @@
 package com.shared.model;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
+//import com.googlecode.objectify.annotation.Entity;
+//import com.googlecode.objectify.annotation.Id;
 
 import java.io.Serializable;
 
 /**
  * Created by dmitry on 22.08.16.
  */
-@Entity
+//@Entity
 public class HourCostModel implements Serializable, IsSerializable {
-  @Id
+//  @Id
   private long id;
 
   public long getId() {

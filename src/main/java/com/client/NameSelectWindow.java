@@ -89,6 +89,7 @@ public class NameSelectWindow extends DialogBox {
             }
         });
         HorizontalPanel buttonContainer = new HorizontalPanel();
+        buttonContainer.setSpacing(2);
 
         buttonContainer.add(createButton);
         buttonContainer.add(cancelButton);

@@ -52,7 +52,7 @@ import java.util.Map;
  * Time: 3:42 PM
  * To change this template use File | Settings | File Templates.
  */
-public class SettingsPanel extends SplitLayoutPanel {
+public class SettingsPanel extends DockPanel {
 //    @Inject
 //    private SimpleEventBus eventBus;
     private int selectedName = -1;
@@ -69,10 +69,15 @@ public class SettingsPanel extends SplitLayoutPanel {
         super();
 //        super(Style.Unit.PX);
         VerticalPanel costSettingsVerticalPanel = new VerticalPanel();
-        costSettingsVerticalPanel.setSize("300px", "300px");
+        costSettingsVerticalPanel.setSpacing(5);
+        costSettingsVerticalPanel.setWidth("100%");
+        costSettingsVerticalPanel.setHeight("100%");
+        costSettingsVerticalPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+        costSettingsVerticalPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+//        costSettingsVerticalPanel.setSize("300px", "300px");
         FlowPanel radioBoxesPanel = new FlowPanel();
-        radioBoxesPanel.setHeight("30px");
-        radioBoxesPanel.setWidth("400px");
+//        radioBoxesPanel.setHeight("30px");
+//        radioBoxesPanel.setWidth("400px");
         Injector.INSTANCE.getEventBus().addHandler(UpdateNameOnSettingsEvent.TYPE, new UpdateNameOnSettingsEventHandler() {
             @Override
             public void updateSum(UpdateNameOnSettingsEvent updateNameEvent) {
@@ -107,28 +112,39 @@ public class SettingsPanel extends SplitLayoutPanel {
 
         costSettingsVerticalPanel.add(deckLayoutPanel);
         setWidth("100%");
-        setHeight("500px");
+        setHeight("80%");
 //        add(new CheckBox("Some check"));
 
         VerticalPanel pseudoNamesSettingsPanel = new VerticalPanel();
-        pseudoNamesSettingsPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_LEFT);
-        pseudoNamesSettingsPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_TOP);
-        Label namesLabel = new Label("Настройки псевдонимов:");
+        pseudoNamesSettingsPanel.getElement().getStyle().setBorderWidth(1, Style.Unit.PX);
+        pseudoNamesSettingsPanel.getElement().getStyle().setBorderStyle(Style.BorderStyle.SOLID);
+        pseudoNamesSettingsPanel.setBorderWidth(1);
+        pseudoNamesSettingsPanel.setSpacing(5);
+        pseudoNamesSettingsPanel.setWidth("70%");
+        pseudoNamesSettingsPanel.setHeight("80%");
+        pseudoNamesSettingsPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+        pseudoNamesSettingsPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+        Label namesLabel = new Label("НАСТРОЙКИ ИМЕН:");
         pseudoNamesSettingsPanel.add(namesLabel);
         HorizontalPanel addNamePanel = new HorizontalPanel();
+        addNamePanel.setSpacing(2);
         Label newNameLabel = new Label("Имя: ");
         oracle = new MultiWordSuggestOracle();
         final SuggestBox namesTextBox = new SuggestBox(oracle);
 
         final Button saveNameButton = new Button("Сохранить");
+        final Button cancelButton = new Button("Отмена");
 
         addNamePanel.add(newNameLabel);
         addNamePanel.add(namesTextBox);
         addNamePanel.add(saveNameButton);
-        saveNameButton.setVisible(false);
+        addNamePanel.add(cancelButton);
+        saveNameButton.setEnabled(false);
+        cancelButton.setEnabled(false);
         pseudoNamesSettingsPanel.add(addNamePanel);
         HorizontalPanel existingNamesPanel = new HorizontalPanel();
-        Label existingNamesLabel = new Label("Существующие имена: ");
+        existingNamesPanel.setSpacing(5);
+        Label existingNamesLabel = new Label("Имена: ");
 //        namesBox.addChangeHandler(new ChangeHandler() {
 //            @Override
 //            public void onChange(ChangeEvent event) {
@@ -195,8 +211,10 @@ public class SettingsPanel extends SplitLayoutPanel {
 
                             @Override
                             public void onSuccess(Void result) {
+                                reloadPseudoNames();
+                                UpdateNameEvent updateNameEvent = new UpdateNameEvent();
+                                Injector.INSTANCE.getEventBus().fireEvent(updateNameEvent);
                                 namesTextBox.setText("");
-                                namesBox.addItem(namesTextBoxValue);
                             }
                         });
             }
@@ -220,7 +238,8 @@ public class SettingsPanel extends SplitLayoutPanel {
                 String selectedValue = namesBox.getSelectedValue();
                 oldName = selectedValue;
                 namesTextBox.setValue(selectedValue);
-                saveNameButton.setVisible(true);
+                saveNameButton.setEnabled(true);
+                cancelButton.setEnabled(true);
             }
         });
 
@@ -253,15 +272,23 @@ public class SettingsPanel extends SplitLayoutPanel {
                         reloadPseudoNames();
                     }
                 });
-                saveNameButton.setVisible(false);
+                saveNameButton.setEnabled(false);
             }
         });
-
+        cancelButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                saveNameButton.setEnabled(false);
+                cancelButton.setEnabled(false);
+                namesTextBox.setValue(null);
+            }
+        });
         namesTextBox.addSelectionHandler(new SelectionHandler<SuggestOracle.Suggestion>() {
             @Override
             public void onSelection(SelectionEvent<SuggestOracle.Suggestion> event) {
                 oldName = event.getSelectedItem().getReplacementString();
-                saveNameButton.setVisible(true);
+                saveNameButton.setEnabled(true);
+                cancelButton.setEnabled(true);
             }
         });
 
@@ -304,13 +331,14 @@ public class SettingsPanel extends SplitLayoutPanel {
 
 //        add(namesBox);
         HorizontalPanel buttonsPanel = new HorizontalPanel();
+        buttonsPanel.setSpacing(5);
         buttonsPanel.add(addNameButton);
         buttonsPanel.add(editNameButton);
         buttonsPanel.add(removeNameButton);
         pseudoNamesSettingsPanel.add(buttonsPanel);
-        pseudoNamesSettingsPanel.setSpacing(10);
+//        pseudoNamesSettingsPanel.setSpacing(10);
 //        add(pseudoNamesSettingsPanel);
-        addWest(pseudoNamesSettingsPanel, 350);
+        add(pseudoNamesSettingsPanel, DockPanel.WEST);
 
 //        add(new Label("Время:"));
 
@@ -372,7 +400,7 @@ public class SettingsPanel extends SplitLayoutPanel {
 //        clientSessionService.getCurrentUser();
 //        add(maxSessionLengthTextBox);
 
-        Button saveButton = new Button("Сохранить настройки");
+        Button saveButton = new Button("Сохранить настройки стоимости");
         saveButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -447,11 +475,15 @@ public class SettingsPanel extends SplitLayoutPanel {
 //        });
 
         HorizontalPanel southPanel = new HorizontalPanel();
+        this.setWidth("100%");
+        this.setHeight("10%");
+        this.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+        this.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
         southPanel.add(saveButton);
 
-        addSouth(southPanel, 30);
+        add(southPanel, DockPanel.SOUTH);
 //        addNorth(deckLayoutPanel, 200);
-        add(costSettingsVerticalPanel);
+        add(costSettingsVerticalPanel, DockPanel.CENTER);
 //        add(saveButton);
 
         Injector.INSTANCE.getEventBus().addHandler(UserLoggedInEvent.TYPE, new UserLoggedInHandler() {

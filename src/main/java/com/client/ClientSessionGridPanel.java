@@ -664,22 +664,24 @@ public class ClientSessionGridPanel extends VerticalPanel {
 
 //    Column<ClientSession, String> statusColumn =
 
-    clientSessionDataGrid.addColumn(new Column<ClientSession, ImageResource>(new ImageResourceCell()) {
+    Column<ClientSession, ImageResource> imageColumn = new Column<ClientSession, ImageResource>(new ImageResourceCell()) {
       @Override
       public ImageResource getValue(ClientSession clientSession) {
         if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STARTED) {
           return Images.INSTANCE.progress();
         } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED_UNLIMITED) {
           return Images.INSTANCE.stoppedUnlimited();
-        } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.REMOVED){
+        } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.REMOVED) {
           return Images.INSTANCE.removedSession();
-        } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.PAYED){
+        } else if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.PAYED) {
           return Images.INSTANCE.payedSession();
-        }else {
+        } else {
           return Images.INSTANCE.createdSession();
         }
       }
-    });
+    };
+    clientSessionDataGrid.setColumnWidth(imageColumn, 50, Style.Unit.PX);
+    clientSessionDataGrid.addColumn(imageColumn);
 
     ButtonCellBase<String> buttonCellBase = new ButtonCellBase<>(new ButtonCellBase.DefaultAppearance<String>(new AbstractSafeHtmlRenderer<String>() {
       @Override
