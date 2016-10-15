@@ -14,7 +14,7 @@ import java.util.List;
  * Created by dmitry on 22.08.16.
  */
 public class AntiTextBox extends TextBox {
-  List<Integer> permittedChars = Arrays.asList(9, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 190,  KeyCodes.KEY_BACKSPACE,
+  List<Integer> permittedChars = Arrays.asList(0, 9, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 190,  KeyCodes.KEY_BACKSPACE,
           KeyCodes.KEY_DELETE, KeyCodes.KEY_LEFT, KeyCodes.KEY_RIGHT, KeyCodes.KEY_NUM_PERIOD);
   public AntiTextBox() {
     addKeyDownHandler(new KeyDownHandler() {

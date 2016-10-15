@@ -26,6 +26,7 @@ public class AntiMoneyTextBox extends AntiTextBox {
     String superValue = super.getValue();
     long value = 0;
     if (superValue != null && !superValue.isEmpty()) {
+      superValue = superValue.replace(',', '.');
       value = new BigDecimal(superValue).multiply(new BigDecimal("100")).longValue();
     }
     return String.valueOf(value);
