@@ -9,12 +9,19 @@ import com.shared.model.SettingsHolder;
 import com.shared.model.User;
 import com.shared.utils.UserUtils;
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Calendar;
 import java.util.Collections;
@@ -29,6 +36,7 @@ import java.util.List;
  * Time: 5:23 PM
  * To change this template use File | Settings | File Templates.
  */
+@Repository
 public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
 //    Map<String,SessionPseudoName> pseudoNamesMap = new HashMap<>();
 //    Map<Long, ClientSession> clientSessionMap = new HashMap<>();
@@ -36,6 +44,12 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
 //    Map<Long, SettingsHolder> settingsHolderMap = new HashMap<>();
 //    Map<Long, HourCostModel> hourCostModelMap = new HashMap<>();
 //    Map<Long, MoreLessUnlimModel> moreLessUnlimModelMap = new HashMap<>();
+    @Autowired
+    private SessionFactory sessionFactory;
+
+//    public void setSessionFactory(SessionFactory sessionFactory) {
+//        this.sessionFactory = sessionFactory;
+//    }
 
     public ClientSessionHibernateDaoImpl() {
 
@@ -577,25 +591,43 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
     }
 
     @Override
+    @Transactional
     public User login(String userName, String userPassword) {
-        Session session = HibernateAnnotationUtil.getSessionFactory().openSession();
+
+        Subject currentUser = SecurityUtils.getSubject();
+
+        org.apache.shiro.session.Session session = currentUser.getSession();
+        session.setAttribute( "sessionId", session.getId() );
+
+        if ( !currentUser.isAuthenticated() ) {
+            //collect user principals and credentials in a gui specific manner
+            //such as username/password html form, X509 certificate, OpenID, etc.
+            //We'll use the username/password example here since it is the most common.
+            //(do you know what movie this is from? ;)
+            UsernamePasswordToken token = new UsernamePasswordToken(userName, userPassword);
+            //this is all you have to do to support 'remember me' (no config - built in!):
+            token.setRememberMe(true);
+            currentUser.login(token);
+        }
+
+        Session hibernateSession = HibernateAnnotationUtil.getSessionFactory().openSession();
 
         Transaction transaction = null;
         try {
-            transaction = session.beginTransaction();
-//            populateDB(session);
-//            session.flush();
+            transaction = hibernateSession.beginTransaction();
+//            populateDB(hibernateSession);
+//            hibernateSession.flush();
 
-            Query query = session.createQuery("from com.shared.model.User as u where u.userName=:userName");
+            Query query = hibernateSession.createQuery("from com.shared.model.User as u where u.userName=:userName");
             query.setParameter("userName", userName);
             User user = (User) query.uniqueResult();
             if (user != null) {
-                Query settingsHolderQuery = session.createQuery("from com.shared.model.SettingsHolder sh " +
+                Query settingsHolderQuery = hibernateSession.createQuery("from com.shared.model.SettingsHolder sh " +
                         "where sh.userEntity.id = :userId");
                 settingsHolderQuery.setParameter("userId", user.getUserId());
 //                settingsHolderQuery.setParameter("loggedUserId", loggedUser.getUserEntity());
                 SettingsHolder settingsHolder = (SettingsHolder) settingsHolderQuery.uniqueResult();
-//                Query moreLessModelQuery = session.createQuery("from com.shared.model.MoreLessUnlimModel ml " +
+//                Query moreLessModelQuery = hibernateSession.createQuery("from com.shared.model.MoreLessUnlimModel ml " +
 //                        "where ml.setting = :settingId");
 //                moreLessModelQuery.setParameter("settingId", settingsHolder.getSettingsId());
 //
@@ -621,7 +653,7 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             }
             e.printStackTrace();
         } finally {
-            session.close();
+            hibernateSession.close();
         }
         return null;
     }

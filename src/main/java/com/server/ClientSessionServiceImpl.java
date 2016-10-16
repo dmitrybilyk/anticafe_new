@@ -9,6 +9,9 @@ import com.shared.model.DatePoint;
 import com.shared.model.MoreLessUnlimModel;
 import com.shared.model.SessionPseudoName;
 import com.shared.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -19,8 +22,17 @@ import java.util.List;
  * Time: 2:01 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ClientSessionServiceImpl extends RemoteServiceServlet implements ClientSessionService {
-    private ClientSessionDao clientSessionDao = new ClientSessionHibernateDaoImpl();
+@Service
+public class ClientSessionServiceImpl extends AutowiringRemoteServiceServlet implements ClientSessionService {
+    @Autowired
+//    @Qualifier(value = "ClientSessionHibernateDaoImpl")
+    private ClientSessionDao clientSessionDao;
+
+//    public void setClientSessionDao(ClientSessionDao clientSessionDao) {
+//        this.clientSessionDao = clientSessionDao;
+//    }
+
+    //    private ClientSessionDao clientSessionDao = new ClientSessionHibernateDaoImpl();
 //    private ClientSessionDao clientSessionDao = new ClientSessionNoSqlDaoImpl();
     @Override
     public List<SessionPseudoName> getFreePseudoNames(Long userId) {

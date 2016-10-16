@@ -7,6 +7,7 @@ import com.shared.model.DatePoint;
 import com.shared.model.MoreLessUnlimModel;
 import com.shared.model.SessionPseudoName;
 import com.shared.model.User;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ import java.util.List;
  * Time: 1:58 PM
  * To change this template use File | Settings | File Templates.
  */
+//@Service
 @RemoteServiceRelativePath("clientSession")
 public interface ClientSessionService extends RemoteService {
     public List<SessionPseudoName> getFreePseudoNames(Long userId);
