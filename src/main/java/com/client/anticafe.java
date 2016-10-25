@@ -6,6 +6,7 @@ import com.client.service.ClientSessionServiceAsync;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.shared.SimpleEventBus;
+import com.google.gwt.user.client.ui.LayoutPanel;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.visualization.client.VisualizationUtils;
@@ -30,14 +31,14 @@ public class anticafe implements EntryPoint {
       // Load the visualization api, passing the onLoadCallback to be called
       // when loading is done.
       final Injector injector = Injector.INSTANCE;
-      Runnable runnable = new Runnable() {
-          @Override
-          public void run() {
+//      Runnable runnable = new Runnable() {
+//          @Override
+//          public void run() {
             RootLayoutPanel.get().getElement().getStyle().setBackgroundColor("khaki");
             RootLayoutPanel.get().add(injector.getLoginPanel());
-          }
-      };
-      VisualizationUtils.loadVisualizationApi(runnable, PieChart.PACKAGE);
+//          }
+//      };
+//      VisualizationUtils.loadVisualizationApi(runnable, PieChart.PACKAGE);
 
   }
 }

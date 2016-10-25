@@ -24,6 +24,8 @@ public interface ClientSessionDao {
 
     List<SessionPseudoName> getFreePseudoNames(Long userId);
 
+    void logout(String userName);
+
     void markNameAsFree(String name, Long userId);
 
     SessionPseudoName markNameAsUsed(String name, Long userId);

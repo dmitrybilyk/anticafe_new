@@ -513,7 +513,9 @@ public class SettingsPanel extends DockPanel {
                 namesBox.clear();
                 oracle.clear();
                 for (SessionPseudoName name : strings) {
-                    oracle.add(name.getName());
+                    if (name  != null && name.getName() != null) {
+                        oracle.add(name.getName());
+                    }
                     namesBox.addItem(name.getName());
                 }//To change body of implemented methods use File | Settings | File Templates.
             }

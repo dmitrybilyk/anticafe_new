@@ -53,6 +53,7 @@ import com.shared.model.SettingsHolder;
 import com.shared.utils.UserUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -69,6 +70,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
   private Column<ClientSession, String> manageButtonsColumn;
   private Column<ClientSession, String> payColumn;
   ListDataProvider<ClientSession> listDataProvider;
+  private List<ClientSession> clientSessions = new ArrayList<>();
   private final ClientSessionServiceAsync clientSessionService = GWT.create(ClientSessionService.class);
   //    private List<SessionPseudoName> pseudoNamesList = new ArrayList<>();
   final DataGrid<ClientSession> clientSessionDataGrid = new DataGrid<ClientSession>(10, new ProvidesKey<ClientSession>() {
@@ -795,6 +797,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
 //            ClientSessionGridPanel.this.clientSessionDataGrid.redrawRow(i);
 //          }
 //        }
+//        updateListDataProvider();
         ClientSessionGridPanel.this.clientSessionDataGrid.redraw();
 //        long sum = 0;
 //        for (int i = 0; i < ClientSessionGridPanel.this.clientSessionDataGrid.getRowCount(); i++) {
@@ -829,6 +832,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
       public void onSuccess(List<ClientSession> clientSessions) {
         listDataProvider = new ListDataProvider<ClientSession>(clientSessions);
         listDataProvider.addDataDisplay(clientSessionDataGrid);
+        ClientSessionGridPanel.this.clientSessions = clientSessions;
         updateListDataProviderOnSuccess(clientSessions);
 //        ColumnSortEvent.ListHandler<ClientSession> sortHandler = new ColumnSortEvent.ListHandler<ClientSession>(clientSessions);
 //        sortHandler.setComparator(manageButtonsColumn,
@@ -846,10 +850,20 @@ public class ClientSessionGridPanel extends VerticalPanel {
   }
 
   private void updateListDataProviderOnSuccess(List<ClientSession> result) {
+    clientSessions = result;
     listDataProvider.getList().clear();
     listDataProvider.getList().addAll(result);
     listDataProvider.refresh();
     clientSessionDataGrid.setVisibleRange(0, 10);
+  }
+
+  private void updateListDataProvider() {
+    if (listDataProvider != null) {
+      listDataProvider.getList().clear();
+      listDataProvider.getList().addAll(clientSessions);
+      listDataProvider.refresh();
+      clientSessionDataGrid.setVisibleRange(0, 10);
+    }
   }
 
   private long getSum(long sum, ClientSession clientSession) {
@@ -1104,7 +1118,7 @@ public class ClientSessionGridPanel extends VerticalPanel {
 
       // Calculate the age of all visible contacts.
       String ageStr = "";
-      List<ClientSession> items = clientSessionDataGrid.getVisibleItems();
+      List<ClientSession> items = clientSessions;
       if (items.size() > 0) {
         int sum = getSum(items);
         ageStr = "Итого: " + getPrettyMoney(sum);
@@ -1132,19 +1146,23 @@ public class ClientSessionGridPanel extends VerticalPanel {
   private int getSum(List<ClientSession> items) {
     int sum = 0;
     for (ClientSession clientSession : items) {
-      if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.REMOVED) {
-        continue;
-      }
-      if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED ||
-              clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.PAYED ||
-              clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED_UNLIMITED) {
+//      if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.REMOVED) {
+//        continue;
+//      }
+//      if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED ||
+//              clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.PAYED ||
+//              clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STOPPED_UNLIMITED) {
+//        sum += clientSession.getFinalSum();
+//        continue;
+//      }
+      if (clientSession.getSessionStatus() == ClientSession.SESSION_STATUS.STARTED) {
+        if (UserUtils.getSettings().getCurrentCountStrategy() == SettingsHolder.countStrategy.MULTI_HOURS) {
+          sum += getMultiHoursSum(0, clientSession);
+        } else if (UserUtils.getSettings().getCurrentCountStrategy() == SettingsHolder.countStrategy.HOUR_MINUTES) {
+          sum += getHourMinutestSum(0, clientSession, false);
+        }
+      } else {
         sum += clientSession.getFinalSum();
-        continue;
-      }
-      if (UserUtils.getSettings().getCurrentCountStrategy() == SettingsHolder.countStrategy.MULTI_HOURS){
-        sum += getMultiHoursSum(0, clientSession);
-      } else if (UserUtils.getSettings().getCurrentCountStrategy() == SettingsHolder.countStrategy.HOUR_MINUTES){
-        sum += getHourMinutestSum(0, clientSession, false);
       }
     }
     return sum;

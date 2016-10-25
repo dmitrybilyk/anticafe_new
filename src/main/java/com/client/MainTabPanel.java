@@ -16,6 +16,7 @@ import com.client.panels.SettingsPanel;
 import com.client.service.ClientSessionService;
 import com.client.service.ClientSessionServiceAsync;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.ScriptInjector;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -31,18 +32,22 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DecoratedPopupPanel;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.MultiWordSuggestOracle;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.visualization.client.VisualizationUtils;
+import com.google.gwt.visualization.client.visualizations.PieChart;
 import com.google.inject.Inject;
 import com.shared.model.ClientSession;
 import com.shared.model.DatePoint;
@@ -246,7 +251,7 @@ public class MainTabPanel extends TabLayoutPanel {
 
           @Override
           public void onSuccess(Void result) {
-            Window.alert("User is created" );
+            Window.alert("User is created");
           }
         });
       }
@@ -263,7 +268,7 @@ public class MainTabPanel extends TabLayoutPanel {
 
           @Override
           public void onSuccess(Void result) {
-            Window.alert("User is removed" );
+            Window.alert("User is removed");
           }
         });
       }
@@ -272,6 +277,33 @@ public class MainTabPanel extends TabLayoutPanel {
     eastButtonsPanel.add(userNameBox);
     eastButtonsPanel.add(addUserButton);
     eastButtonsPanel.add(removeUserButton);
+    Button logoutButton = new Button("Выход");
+    logoutButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+       clientSessionService.logout(UserUtils.currentUser.getUserName(), new AsyncCallback<Void>() {
+         @Override
+         public void onFailure(Throwable caught) {
+
+         }
+
+         @Override
+         public void onSuccess(Void result) {
+//           Runnable runnable = new Runnable() {
+//             @Override
+//             public void run() {
+           Window.Location.reload();
+//               RootLayoutPanel.get().clear();
+//               RootLayoutPanel.get().add(Injector.INSTANCE.getLoginPanel());
+             }
+//           };
+//           VisualizationUtils.loadVisualizationApi(runnable, PieChart.PACKAGE);
+//         }
+       });
+      }
+    });
+    eastButtonsPanel.add(logoutButton);
+//    eastButtonsPanel.add(new HTML("<div class=\"pluso\" data-background=\"transparent\" data-options=\"small,round,line,horizontal,nocounter,theme=04\" data-services=\"vkontakte,odnoklassniki,facebook,twitter,google,moimir,email,print\"></div>"));
     userNameBox.setVisible(false);
     addUserButton.setVisible(false);
     removeUserButton.setVisible(false);

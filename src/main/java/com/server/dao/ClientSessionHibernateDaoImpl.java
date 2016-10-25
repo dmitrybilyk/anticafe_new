@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.BadPaddingException;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,8 +45,8 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
 //    Map<Long, SettingsHolder> settingsHolderMap = new HashMap<>();
 //    Map<Long, HourCostModel> hourCostModelMap = new HashMap<>();
 //    Map<Long, MoreLessUnlimModel> moreLessUnlimModelMap = new HashMap<>();
-    @Autowired
-    private SessionFactory sessionFactory;
+//    @Autowired
+//    private SessionFactory sessionFactory;
 
 //    public void setSessionFactory(SessionFactory sessionFactory) {
 //        this.sessionFactory = sessionFactory;
@@ -94,6 +95,12 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             session.close();
         }
         return null;
+    }
+
+    @Override
+    public void logout(String userName) {
+        Subject subject = SecurityUtils.getSubject();
+        subject.logout();
     }
 
     @Override
@@ -593,29 +600,26 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
     @Override
     @Transactional
     public User login(String userName, String userPassword) {
+//        populateDB();
+            Subject currentUser = SecurityUtils.getSubject();
 
-        Subject currentUser = SecurityUtils.getSubject();
+            org.apache.shiro.session.Session session = currentUser.getSession();
+            session.setAttribute("sessionId", session.getId());
 
-        org.apache.shiro.session.Session session = currentUser.getSession();
-        session.setAttribute( "sessionId", session.getId() );
-
-        if ( !currentUser.isAuthenticated() ) {
-            //collect user principals and credentials in a gui specific manner
-            //such as username/password html form, X509 certificate, OpenID, etc.
-            //We'll use the username/password example here since it is the most common.
-            //(do you know what movie this is from? ;)
-            UsernamePasswordToken token = new UsernamePasswordToken(userName, userPassword);
-            //this is all you have to do to support 'remember me' (no config - built in!):
-            token.setRememberMe(true);
-            currentUser.login(token);
-        }
-
+            if (!currentUser.isAuthenticated()) {
+                //collect user principals and credentials in a gui specific manner
+                //such as username/password html form, X509 certificate, OpenID, etc.
+                //We'll use the username/password example here since it is the most common.
+                //(do you know what movie this is from? ;)
+                UsernamePasswordToken token = new UsernamePasswordToken(userName, userPassword);
+                //this is all you have to do to support 'remember me' (no config - built in!):
+                token.setRememberMe(true);
+                currentUser.login(token);
+            }
         Session hibernateSession = HibernateAnnotationUtil.getSessionFactory().openSession();
-
         Transaction transaction = null;
         try {
             transaction = hibernateSession.beginTransaction();
-//            populateDB(hibernateSession);
 //            hibernateSession.flush();
 
             Query query = hibernateSession.createQuery("from com.shared.model.User as u where u.userName=:userName");
@@ -649,8 +653,15 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
             return destObject;
         } catch (HibernateException e) {
             if (transaction != null) {
-                transaction.rollback();
+                try {
+                    transaction.rollback();
+                } catch(Exception re) {
+                    System.err.println("Error when trying to rollback transaction:"); // use logging framework here
+                    re.printStackTrace();
+                }
             }
+            System.err.println("Original error when executing query:"); // // use logging framework here
+
             e.printStackTrace();
         } finally {
             hibernateSession.close();
@@ -658,7 +669,11 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
         return null;
     }
 
-    private void populateDB(Session session) {
+    private void populateDB() {
+        Session session = HibernateAnnotationUtil.getSessionFactory().openSession();
+        Transaction transaction = null;
+        try {
+            transaction = session.beginTransaction();
         User testUser = new User();
 //        testUser.setUserEntity(0l);
         testUser.setUserName("dik81");
@@ -713,6 +728,21 @@ public class ClientSessionHibernateDaoImpl implements ClientSessionDao{
         c.add(Calendar.DATE, -1);
         addTestClientSession(testUser, c.getTime().getTime(), System.currentTimeMillis(), ClientSession.SESSION_STATUS.PAYED, Long.valueOf("5555"), session);
         addTestClientSession(testUser, System.currentTimeMillis(), System.currentTimeMillis(), ClientSession.SESSION_STATUS.REMOVED, 0l, session);
+        } catch (HibernateException e) {
+            if (transaction != null) {
+                try {
+                    transaction.rollback();
+                } catch(Exception re) {
+                    System.err.println("Error when trying to rollback transaction:"); // use logging framework here
+                    re.printStackTrace();
+                }
+            }
+            System.err.println("Original error when executing query:"); // // use logging framework here
+
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
     }
 
     private void addUser(Session session, String userName) {

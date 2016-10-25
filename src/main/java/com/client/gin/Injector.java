@@ -2,6 +2,7 @@ package com.client.gin;
 
 import com.client.ClientSessionGridPanel;
 import com.client.LoginPanel;
+import com.client.MainPanel;
 import com.client.MainTabPanel;
 import com.client.NameSelectWindow;
 import com.client.panels.SettingsPanel;
@@ -16,6 +17,7 @@ public interface Injector extends Ginjector {
 
     public EventBus getEventBus();
     public LoginPanel getLoginPanel();
+    public MainPanel getMainPanel();
     public MainTabPanel getMainTabPanel();
     public ClientSessionGridPanel getClientSessionGridPanel();
     public NameSelectWindow getNameSelectionWidnow();

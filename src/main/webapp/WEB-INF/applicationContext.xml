@@ -11,19 +11,19 @@
 
     <context:annotation-config/>
     <context:component-scan base-package="com.server" />
-    <bean id="dataSource"
-             class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-              <property name="driverClassName" value="org.postgresql.Driver" />
-              <property name="url" value="jdbc:postgresql://localhost:5432/timers_db" />
-              <property name="username" value="postgres" />
-              <property name="password" value="postgres" />
-       </bean>
+    <!--<bean id="dataSource"-->
+             <!--class="org.springframework.jdbc.datasource.DriverManagerDataSource">-->
+              <!--<property name="driverClassName" value="org.postgresql.Driver" />-->
+              <!--<property name="url" value="jdbc:postgresql://localhost:5432/timers_db" />-->
+              <!--<property name="username" value="postgres" />-->
+              <!--<property name="password" value="postgres" />-->
+       <!--</bean>-->
 
-       <bean id="sessionFactory"
-             class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
-              <property name="dataSource" ref="dataSource"/>
-              <!--<property name="configLocation" value="classpath:/../resources/hibernate/hibernate.cfg.xml"/>-->
-       </bean>
+       <!--<bean id="sessionFactory"-->
+             <!--class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">-->
+              <!--<property name="dataSource" ref="dataSource"/>-->
+              <!--&lt;!&ndash;<property name="configLocation" value="classpath:/../resources/hibernate/hibernate.cfg.xml"/>&ndash;&gt;-->
+       <!--</bean>-->
 
        <!--<bean id="clientSessionDao" class="com.server.dao.ClientSessionHibernateDaoImpl">-->
               <!--<property name="sessionFactory" ref="sessionFactory"/>-->

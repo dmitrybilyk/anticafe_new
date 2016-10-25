@@ -5,6 +5,8 @@ import com.client.gin.Injector;
 import com.client.service.ClientSessionService;
 import com.client.service.ClientSessionServiceAsync;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -22,6 +24,7 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -152,6 +155,7 @@ public class LoginPanel extends VerticalPanel {
 //                                    UserUtils.INSTANCE.getCurrentUser().setSettings(result.getSettings());
                         RootLayoutPanel.get().clear();
                         RootLayoutPanel.get().add(Injector.INSTANCE.getMainTabPanel());
+//                        RootLayoutPanel.get().add(Injector.INSTANCE.getMainPanel());
                         Injector.INSTANCE.getEventBus().fireEvent(userLoggedInEvent);
                     }
                 });

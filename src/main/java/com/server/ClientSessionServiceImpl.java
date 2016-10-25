@@ -39,7 +39,12 @@ public class ClientSessionServiceImpl extends AutowiringRemoteServiceServlet imp
         return clientSessionDao.getFreePseudoNames(userId);  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    @Override
+  @Override
+  public void logout(String userName) {
+    clientSessionDao.logout(userName);
+  }
+
+  @Override
     public void markNameAsFree(String name, Long userId) {
         clientSessionDao.markNameAsFree(name, userId);
     }
